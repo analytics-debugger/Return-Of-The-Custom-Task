@@ -16,10 +16,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Bun
-      uses: oven-sh/bun-action@v1
-      with:
-        bun-version: 'latest'  # or specify a specific version of Bun
+    - name: Install Bun
+      run: |
+        curl -fsSL https://bun.sh/install | bash
+        export PATH="$HOME/.bun/bin:$PATH"
 
     - name: Install dependencies
       run: bun install
