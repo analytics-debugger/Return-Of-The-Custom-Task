@@ -1,5 +1,5 @@
+![ReturnoftheCustomTask](https://github.com/user-attachments/assets/92f0b278-1d0e-4d62-a289-2ac203eefc25)
 
-![image](https://github.com/user-attachments/assets/85f977fd-8269-471c-b41f-e0b93a14382d)
 
 # Return-Of-The-Custom-Task
 
