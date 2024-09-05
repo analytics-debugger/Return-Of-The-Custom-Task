@@ -1,5 +1,5 @@
 
-![image](https://github-production-user-asset-6210df.s3.amazonaws.com/1494564/364853530-85f977fd-8269-471c-b41f-e0b93a14382d.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240905%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240905T185402Z&X-Amz-Expires=300&X-Amz-Signature=2cd3c43412973beb7dd641df76d60b538762955904b87e9938b5ea6b054069e8&X-Amz-SignedHeaders=host&actor_id=1494564&key_id=0&repo_id=852888529)
+![image](https://github.com/user-attachments/assets/85f977fd-8269-471c-b41f-e0b93a14382d)
 
 # Return-Of-The-Custom-Task
 
