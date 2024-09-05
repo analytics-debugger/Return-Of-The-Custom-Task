@@ -4,7 +4,8 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "build": "rollup -c"
+        "build": "rollup -c",
+        "watch": "rollup -c -w"
     },
     "devDependencies": {
         "@rollup/plugin-terser": "^0.4.4",

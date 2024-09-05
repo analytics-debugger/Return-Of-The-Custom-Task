@@ -7,7 +7,7 @@ import { RequestPayload } from '../types/RequestPayload';
  * @returns The modified payload object.
  */
 const logRequestsToConsoleTask = (payload: RequestPayload): RequestPayload => {
-    console.log("TheReturnOfTheCustomTask: Request", payload);
+    console.log("ReturnOfTheCustomTask: Request", payload);
     return payload;
 };
 
