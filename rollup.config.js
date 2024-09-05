@@ -1,10 +1,10 @@
-import esbuild from 'rollup-plugin-esbuild';
+import typescript from '@rollup/plugin-typescript';
+import babel from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import fs from 'fs';
 import path from 'path';
 import { rollup } from 'rollup';
 import { performance } from 'perf_hooks';
-
 
 const srcDir = 'src/tasks';
 const distDir = 'dist/tasks';
@@ -22,7 +22,14 @@ const configs = files.map(file => {
   const baseName = path.basename(file, '.ts');
   return {
     input: path.join(srcDir, file),
-    plugins: [esbuild()],
+    plugins: [
+      typescript(),
+      babel({
+        babelHelpers: 'bundled',
+        presets: [['@babel/preset-env', { targets: 'defaults' }]],
+        exclude: 'node_modules/**'
+      })
+    ],
     output: [
       {
         file: path.join(distDir, `${baseName}.js`),
@@ -42,28 +49,35 @@ const configs = files.map(file => {
     ],
   };
 });
-configs.push({
-    input: path.join('src/', 'index.js'),
-    plugins: [esbuild()],
-    output: [
-      {
-        file: path.join('dist', `GA4CustomTask.js`),
-        format: 'iife',
-        sourcemap: false,
-        exports: 'default',
-        name: 'GA4CustomTask',
-      },
-      {
-        file: path.join('dist', `GA4CustomTask.min.js`),
-        format: 'iife',
-        sourcemap: false,
-        exports: 'default',
-        name: 'GA4CustomTask',
-        plugins: [terser()] // Minified version
-      }
-    ],
-  })
 
+configs.push({
+  input: path.join('src/', 'index.js'),
+  plugins: [
+    typescript(),
+    babel({
+      babelHelpers: 'bundled',
+      presets: [['@babel/preset-env', { targets: 'defaults' }]],
+      exclude: 'node_modules/**'
+    })
+  ],
+  output: [
+    {
+      file: path.join('dist', `GA4CustomTask.js`),
+      format: 'iife',
+      sourcemap: false,
+      exports: 'default',
+      name: 'GA4CustomTask',
+    },
+    {
+      file: path.join('dist', `GA4CustomTask.min.js`),
+      format: 'iife',
+      sourcemap: false,
+      exports: 'default',
+      name: 'GA4CustomTask',
+      plugins: [terser()] // Minified version
+    }
+  ],
+});
 
 // Collect build statistics
 const buildStats = {};
@@ -84,7 +98,6 @@ const buildAndLog = async (config) => {
 
   // Collect statistics
   const baseName = path.basename(nonMinifiedOutput.file, '.js');
-  console.log(fs.statSync(nonMinifiedOutput.file).size);
   buildStats[baseName] = {
     nonMinifiedSize: (fs.statSync(nonMinifiedOutput.file).size / 1024).toFixed(2) + ' KB', // Size in KB
     nonMinifiedTime: (nonMinifiedEndTime - nonMinifiedStartTime).toFixed(2) + ' ms', // Time in ms
@@ -102,16 +115,6 @@ const buildAll = async () => {
   // Print the build summary
   console.log('\nBuild Summary:');
   console.table(buildStats);
-  /*Object.keys(buildStats).forEach(fileName => {
-    const stats = buildStats[fileName];
-    console.log(`File Name: ${fileName}`);
-    console.log(`  Non-Minified Size: ${stats.nonMinifiedSize.toFixed(2)} KB`);
-    console.log(`  Non-Minified Time: ${stats.nonMinifiedTime} ms`);
-    console.log(`  Minified Size: ${stats.minifiedSize.toFixed(2)} KB`);
-    console.log(`  Minified Time: ${stats.minifiedTime} ms`);
-    console.log('');
-  });
-  */
 };
 
 // Execute build
