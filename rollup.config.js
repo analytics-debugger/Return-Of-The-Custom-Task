@@ -18,7 +18,7 @@ if (!fs.existsSync(distDir)) {
 const files = fs.readdirSync(srcDir).filter(file => file.endsWith('.ts'));
 
 // Create Rollup configurations dynamically
-const configs = files.map(file => {
+/* const configs = files.map(file => {
   const baseName = path.basename(file, '.ts');
   return {
     input: path.join(srcDir, file),
@@ -49,35 +49,55 @@ const configs = files.map(file => {
     ],
   };
 });
+*/
+const configs = []
 
 configs.push({
-  input: path.join('src/', 'index.js'),
-  plugins: [
-    typescript(),
-    babel({
-      babelHelpers: 'bundled',
-      presets: [['@babel/preset-env', { targets: 'defaults' }]],
-      exclude: 'node_modules/**'
-    })
-  ],
-  output: [
-    {
-      file: path.join('dist', `GA4CustomTask.js`),
-      format: 'iife',
-      sourcemap: false,
-      exports: 'default',
-      name: 'GA4CustomTask',
-    },
-    {
-      file: path.join('dist', `GA4CustomTask.min.js`),
-      format: 'iife',
-      sourcemap: false,
-      exports: 'default',
-      name: 'GA4CustomTask',
-      plugins: [terser()] // Minified version
-    }
-  ],
-});
+    input: path.join('src/', 'index.js'),
+    cache: false, // Disable cache to avoid stale results
+    plugins: [
+      
+      babel({
+        babelHelpers: 'bundled',
+        exclude: 'node_modules/**', // Ensure all JS files are processed
+        plugins: [
+            [
+              "@babel/plugin-transform-runtime",
+              {
+                "corejs": 3
+              }
+            ]
+          ],
+        presets: [
+            [
+                "@babel/preset-env",
+                {
+                    "targets": "IE 11",
+                    "useBuiltIns": "usage",
+                    "corejs": 3
+                }
+              ]
+        ] // Target ES5
+      })
+    ],
+    output: [
+      {
+        file: path.join('dist', `GA4CustomTask.js`),
+        format: 'iife',
+        sourcemap: false,
+        exports: 'default',
+        name: 'GA4CustomTask',
+      },
+      {
+        file: path.join('dist', `GA4CustomTask.min.js`),
+        format: 'iife',
+        sourcemap: false,
+        exports: 'default',
+        name: 'GA4CustomTask',
+        plugins: [terser()] // Minified version
+      }
+    ],
+  });
 
 // Collect build statistics
 const buildStats = {};
