@@ -18,7 +18,7 @@ if (!fs.existsSync(distDir)) {
 const files = fs.readdirSync(srcDir).filter(file => file.endsWith('.ts'));
 
 // Create Rollup configurations dynamically
-/* const configs = files.map(file => {
+const configs = files.map(file => {
   const baseName = path.basename(file, '.ts');
   return {
     input: path.join(srcDir, file),
@@ -49,48 +49,68 @@ const files = fs.readdirSync(srcDir).filter(file => file.endsWith('.ts'));
     ],
   };
 });
-*/
-const configs = []
+
+//const configs = []
 
 configs.push({
     input: path.join('src/', 'index.js'),
     cache: false, // Disable cache to avoid stale results
     plugins: [
-      
       babel({
-        babelHelpers: 'bundled',
+        babelHelpers: 'bundled', // Keep this as 'bundled'
         exclude: 'node_modules/**', // Ensure all JS files are processed
-        plugins: [
-            [
-              "@babel/plugin-transform-runtime",
-              {
-                "corejs": 3
-              }
-            ]
-          ],
         presets: [
             [
                 "@babel/preset-env",
                 {
-                    "targets": "IE 11",
-                    "useBuiltIns": "usage",
-                    "corejs": 3
+                  "targets": {
+                    "esmodules": false,
+                    "ie": "11"  // or your desired browser versions
+                  },
+                  "loose": true,  // Use simpler transformations, reduces helpers
+                  "useBuiltIns": false,  // Skip automatic polyfill injection
+                  "exclude": [
+                    "transform-function-name",  // Skips naming helpers
+                    "transform-spread",  // Avoid transforming array spread/rest
+                    "transform-arrow-functions",
+                    "transform-block-scoping",
+                    "transform-classes",
+                    "transform-typeof-symbol",  // Skips symbol-related transformations    
+                    "transform-for-of",  // Skip for...of transformation
+                    //"transform-async-to-generator",
+                    "transform-regenerator",
+                    // "transform-async-to-generator",
+                    /*
+                    
+                  
+                    
+          
+                    "transform-regenerator",
+                    
+                   
+                    */
+                  ]  // Skip async/await transformations
                 }
               ]
-        ] // Target ES5
+        ],
+        plugins: [
+          "@babel/plugin-transform-block-scoping",  // Converts `const` and `let` to `var`
+          "@babel/plugin-transform-template-literals",  // Converts template literals to string concatenation
+          "@babel/plugin-transform-arrow-functions"
+        ], // Target ES5
       })
     ],
     output: [
       {
         file: path.join('dist', `GA4CustomTask.js`),
-        format: 'iife',
+        format: 'umd',
         sourcemap: false,
         exports: 'default',
         name: 'GA4CustomTask',
       },
       {
         file: path.join('dist', `GA4CustomTask.min.js`),
-        format: 'iife',
+        format: 'umd',
         sourcemap: false,
         exports: 'default',
         name: 'GA4CustomTask',
@@ -98,6 +118,7 @@ configs.push({
       }
     ],
   });
+
 
 // Collect build statistics
 const buildStats = {};

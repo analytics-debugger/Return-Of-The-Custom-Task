@@ -3,7 +3,14 @@
       [
         "@babel/preset-env",
         {
-          "targets": "Chrome 60",
+          "targets": {
+            "android": "85",
+            "chrome": "85",
+            "firefox": "81",
+            "ie": "11",
+            "ios": "13",
+            "safari": "13"
+          },
           "useBuiltIns": "usage",
           "corejs": 3
         }
