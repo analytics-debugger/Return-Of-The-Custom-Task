@@ -1,7 +1,7 @@
 // src/tasks/preventDuplicateTransactionsTask.ts
 
-import { RequestPayload } from '../types/RequestPayload';
-import storageHelper from '../helpers/storageHelper';
+import { RequestModel } from '../../types/RequestModel';
+import storageHelper from '../../src/helpers/storageHelper';
 /**
  * Monitors purchase events and keeps track of transaction IDs to prevent duplicate transactions.
  * Used a synced dual localStorage and cookie storage to store transaction IDs.
@@ -11,9 +11,9 @@ import storageHelper from '../helpers/storageHelper';
  * @returns The modified payload object.
  */
 const preventDuplicateTransactionsTask = function (
-    payload: RequestPayload,
+    payload: RequestModel,
     storeName: string = '__ad_trans_dedup'
-): RequestPayload {
+): RequestModel {
     // Check if it's a purchase event
     if (payload.en === "purchase") {
         const transactionId: string = payload["ep.transaction_id"];

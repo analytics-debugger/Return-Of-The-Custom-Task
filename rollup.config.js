@@ -6,7 +6,19 @@ import path from 'path';
 import { rollup } from 'rollup';
 import { performance } from 'perf_hooks';
 
-const srcDir = 'src/tasks';
+console.log("Building Started");
+// Remove dist folder before build
+const mainDistDir = 'dist';
+if (fs.existsSync(mainDistDir)) {
+  fs.rmSync(mainDistDir, { recursive: true, force: true }); // Removes the dist folder and all its contents
+  console.log("Removed dist folder");
+}else{
+  console.log("dist folder not found, skip deleting");
+}
+
+
+// Tasks directories
+const srcDir = 'tasks';
 const distDir = 'dist/tasks';
 
 // Ensure the output directory exists
@@ -15,13 +27,17 @@ if (!fs.existsSync(distDir)) {
 }
 
 // Get all TypeScript files from srcDir
-const files = fs.readdirSync(srcDir).filter(file => file.endsWith('.ts'));
+const files = fs.readdirSync(srcDir)
+  .map(dir => path.join(srcDir, dir, 'index.ts'))
+  .filter(filePath => fs.existsSync(filePath));
 
 // Create Rollup configurations dynamically
 const configs = files.map(file => {
   const baseName = path.basename(file, '.ts');
-  return {
-    input: path.join(srcDir, file),
+  const fileOutputName = file.split('\\')[1];
+  
+  return {    
+    input: file,
     plugins: [
       typescript(),
       babel({
@@ -32,25 +48,24 @@ const configs = files.map(file => {
     ],
     output: [
       {
-        file: path.join(distDir, `${baseName}.js`),
+        file: path.join(distDir, `${fileOutputName}.js`),
         format: 'iife',
         sourcemap: false,
         exports: 'default',
-        name: baseName,
+        name: fileOutputName,
       },
       {
-        file: path.join(distDir, `${baseName}.min.js`),
+        file: path.join(distDir, `${fileOutputName}.min.js`),
         format: 'iife',
         sourcemap: false,
         exports: 'default',
-        name: baseName,
+        name: fileOutputName,
         plugins: [terser()] // Minified version
       }
     ],
   };
 });
 
-//const configs = []
 
 configs.push({
     input: path.join('src/', 'index.js'),
@@ -77,19 +92,8 @@ configs.push({
                     "transform-classes",
                     "transform-typeof-symbol",  // Skips symbol-related transformations    
                     "transform-for-of",  // Skip for...of transformation
-                    //"transform-async-to-generator",
                     "transform-regenerator",
-                    // "transform-async-to-generator",
-                    /*
-                    
-                  
-                    
-          
-                    "transform-regenerator",
-                    
-                   
-                    */
-                  ]  // Skip async/await transformations
+                  ]  
                 }
               ]
         ],
@@ -98,7 +102,7 @@ configs.push({
           "@babel/plugin-transform-template-literals",  // Converts template literals to string concatenation
           "@babel/plugin-transform-arrow-functions",
           "transform-remove-console"
-        ], // Target ES5
+        ],
       })
     ],
     output: [

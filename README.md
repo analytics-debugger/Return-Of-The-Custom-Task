@@ -90,5 +90,18 @@ const ga4CustomTaskInterceptor = new GA4CustomTask({
 ## Stacking / Chaining Task
 You may add as many tasks as you want, but remember they will be execute secuencially, so apply them wisely.
 
+# The Request Model
+Working with Google Analytics 4 (GA4) is more complex than with Universal Analytics, mainly because a GA4 request can contain multiple events. This makes it impossible to work with just a single payload. To simplify things, this library automatically splits and parses the request for you. It takes the current GA4 request and builds a `requestModel`, which includes the shared payload and the event details.
+
+You don’t need to worry about parsing the request. If the request doesn’t have a body, the library will handle splitting the main payload and return a single event.
+
+```json
+requestModel: {
+    sharedPayload: {},
+    events: [{}, {}]
+}
+```
+
 # Support
 Donations Accepted
+

@@ -1,6 +1,6 @@
 // src/tasks/mapPayloadSizeTask.ts
 
-import { RequestPayload } from '../types/RequestPayload';
+import { RequestModel } from '../../types/RequestModel';
 
 /**
  * Adds a event parameter on the provided event property name with the size of the payload.
@@ -11,10 +11,10 @@ import { RequestPayload } from '../types/RequestPayload';
  * @returns The modified payload object.
  */
 const mapPayloadSizeTask = (
-    payload: RequestPayload,
+    payload: RequestModel,
     name: string,
     scope: 'event'
-): RequestPayload => {
+): RequestModel => {
     if (!payload) {
         throw new Error('Payload is required.');
     }

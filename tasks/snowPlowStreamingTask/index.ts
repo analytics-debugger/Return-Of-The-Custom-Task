@@ -1,6 +1,6 @@
 // src/tasks/snowPlowStreamingTask.ts
 
-import { RequestPayload } from '../types/RequestPayload';
+import { RequestModel } from '../../types/RequestModel';
 
 /**
  * Sends a copy of the payload to a Snowplow endpoint. 
@@ -10,10 +10,10 @@ import { RequestPayload } from '../types/RequestPayload';
  * @returns The modified payload object.
  */
 const snowPlowStreamingTask = (
-    payload: RequestPayload,
+    payload: RequestModel,
     endpoint: string,
     scope: 'event'
-): RequestPayload => {
+): RequestModel => {
     if (!payload || !endpoint) {
         throw new Error('Payload and endpoints are required.');
     }

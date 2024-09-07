@@ -1,6 +1,6 @@
 // src/tasks/privacySweepTask.ts
 
-import { RequestPayload } from '../types/RequestPayload';
+import { RequestModel } from '../../types/RequestModel';
 
 /**
  * Holder for the privacySweepTask function.
@@ -9,8 +9,8 @@ import { RequestPayload } from '../types/RequestPayload';
 
  */
 const privacySweepTask = (
-    payload: RequestPayload,
-): RequestPayload => {
+    payload: RequestModel,
+): RequestModel => {
     // Check if payload is provided
     if (!payload) {
         throw new Error('Payload is required.');
