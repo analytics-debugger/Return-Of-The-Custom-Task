@@ -20,81 +20,104 @@ GA4CustomTask.prototype.initialize = function() {
 };
 
 // Add the interceptFetch method to GA4CustomTask's prototype
-// Add the interceptFetch method to GA4CustomTask's prototype
 GA4CustomTask.prototype.interceptFetch = function() {
-    var _this = this;
-    var args = arguments;
-    var resource = args[0];
-    var options = args[1];
+    const _this = this;
+    const args = arguments;
+    const resource = args[0];
+    const options = args[1];
 
-    var containsId = function(stackTrace, id) {
+    const containsId = function(stackTrace, id) {
         return new RegExp('id=' + id, 'i').test(stackTrace);
     };
 
-    var isGA4Hit = function(url) {
+    const isGA4Hit = (url) => {
         try {
-            var urlObj = document.createElement('a');
-            urlObj.href = url;
-            var params = urlObj.search.substring(1).split('&');
-            var query = {};
-            for (var i = 0; i < params.length; i++) {
-                var pair = params[i].split('=');
-                query[pair[0]] = decodeURIComponent(pair[1]);
-            }
+            const urlObj = new URL(url);
+            const params = new URLSearchParams(urlObj.search);
 
-            var tid = query['tid'];
-            var cid = query['cid'];
-            var en = query['en'];
-            var v = query['v'];
+            const tid = params.get('tid');
+            const cid = params.get('cid');
+            const v = params.get('v');
 
-            return tid && tid.indexOf('G-') === 0 &&
-                cid !== undefined &&
-                en !== undefined &&
+            return tid && tid.startsWith('G-') &&
+                cid !== null &&
                 v === '2';
         } catch (e) {
             return false;
         }
     };
 
-    if (resource && isGA4Hit(resource)) {
-        var url = document.createElement('a');
-        url.href = resource;
-        var payload = {};
-        var params = url.search.substring(1).split('&');
-        for (var i = 0; i < params.length; i++) {
-            var pair = params[i].split('=');
-            payload[pair[0]] = decodeURIComponent(pair[1]);
-        }
 
-        if (_this.settings.allowedMeasurementIds && Array.isArray(_this.settings.allowedMeasurementIds) &&
-            _this.settings.allowedMeasurementIds.indexOf(payload.tid) === -1) {
-            // It's a GA4 hit but it's not enabled
-            return _this.originalFetch.apply(window, args);
-        }
+    try {
+        if (resource && isGA4Hit(resource)) {
+            const url = new URL(resource);
+            let ga4RequestModel = {
+		endpoint: url.origin + url.pathname,
+                sharedPayload: null,
+                events: []
+            }
 
-        if (_this.settings.tasks && Array.isArray(_this.settings.tasks)) {
-            for (var j = 0; j < _this.settings.tasks.length; j++) {
-                var callback = _this.settings.tasks[j];
-                if (typeof callback === 'function') {
-                    payload = callback(payload);
-                } else {
-                    console.warn('Callback is not a function:', callback);
+            // Build and array to be sure we keep the order of the parameters
+            const payloadArray = Array.from(new URLSearchParams(url.search).entries())
+            // GA4 is not as straightforward as UA, we have 2 types of hits
+            // those who contains 1 event and those who contains multiple events
+            // We'll build a requestModel to handle both cases in the same way.
+            // sharedModel will contain the shared part of the payload
+            // events will hold and array of the events.
+
+            if(!options.body){
+                ga4RequestModel.sharedPayload = Object.fromEntries(new URLSearchParams(Array.from(new URLSearchParams(payloadArray.slice(0, payloadArray.findIndex( ([key]) => key === "en"))).entries())));
+                ga4RequestModel.events =  [Object.fromEntries(new URLSearchParams(Array.from(new URLSearchParams(payloadArray.slice(payloadArray.findIndex( ([key]) => key === "en"))).entries())))];    
+            }else{
+                ga4RequestModel.sharedPayload = Object.fromEntries(new URLSearchParams(Array.from(new URLSearchParams(payloadArray).entries()))),        
+                ga4RequestModel.events = options.body.split("\r\n").map(e=> Object.fromEntries(new URLSearchParams(Array.from(new URLSearchParams(e).entries())))) 
+            }
+	    console.log(ga4RequestModel);
+            let payload = Object.fromEntries(new URLSearchParams(url.search));
+
+            if (this.settings.allowedMeasurementIds && Array.isArray(this.settings.allowedMeasurementIds) && !this.settings.allowedMeasurementIds.includes(payload.tid)) {
+                // It's a GA4 hit but it's not enabled
+                return window.fetch.apply(window, args);
+            }
+
+            if (this.settings.tasks && Array.isArray(this.settings.tasks)) {
+                for (let i = 0; i < this.settings.tasks.length; i++) {
+                    const callback = this.settings.tasks[i];
+                    if (typeof callback === 'function') {
+                        ga4RequestModel = callback(ga4RequestModel);
+                    } else {
+                        console.warn('Callback is not a function:', callback);
+                    }
                 }
             }
+
+            // We are done with the tasks, let's rebuild the resource
+            const reBuildResource = (model) => {
+                const resource = new URLSearchParams(Object.entries(model.sharedPayload)).toString();
+                const body = model.events.map(e=> new URLSearchParams(Object.entries(e)).toString()).join("\r\n")
+		const endpoint = model.endpoint
+                return {
+   		    endpoint,
+                    resource,
+                    body
+                }
+            }
+            // Reconstruct the URL with the modified payload
+            const newResource = reBuildResource(ga4RequestModel);
+
+            if(args[1].body){
+ 	        args[0] = [newResource.endpoint, newResource.resource].join('?');
+                args[1].body = newResource.body;
+            }else{
+	        args[0] = [newResource.endpoint, newResource.resource + '&' + newResource.body].join('?');
+            }           
         }
-
-        // Reconstruct the URL with the modified payload
-        var newUrl = document.createElement('a');
-        newUrl.href = resource;
-        newUrl.search = new URLSearchParams(payload).toString();
-
-        // Update the resource argument with the modified URL
-        args[0] = newUrl.href;
+    } catch (e) {
+        console.error('Error in fetch interceptor:', e);
     }
 
     // Call the original fetch with the correct context and arguments
     return _this.originalFetch.apply(window, args);
 };
-
 
 export default GA4CustomTask;

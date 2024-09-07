@@ -96,7 +96,8 @@ configs.push({
         plugins: [
           "@babel/plugin-transform-block-scoping",  // Converts `const` and `let` to `var`
           "@babel/plugin-transform-template-literals",  // Converts template literals to string concatenation
-          "@babel/plugin-transform-arrow-functions"
+          "@babel/plugin-transform-arrow-functions",
+          "transform-remove-console"
         ], // Target ES5
       })
     ],
