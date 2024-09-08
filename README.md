@@ -49,14 +49,14 @@ Also, if there's no tasks nothing will be intercepted.
 
 ||Task Name|Description|
 |-|------------|--|
-|#1|logRequestsToConsoleTask|Logs all requests to the console, for debugging pourposes
-|#2|mapClientIdTask|Grabs the clientId (&cid) and attaches the value to the specified parameter
-|#3|mapPayloadSizeTask|Attaches the current payload size to the specified parameter
-|#4|preventDuplicateTransactionsTask|Prevents Duplicate Purchases/transaations keeping a list of transactions on the cookies/localStorage
-|#5|snowPlowStreamingTask|Sends a copy of the payload to your SnowPlow Collector
-|#6|sendToSecondaryMeasurementId|Sends a copy of the payload to a secondary account
-|#7|piiScrubberTask|Loops all data in the payload redacting the PII Data
-|#8|privacySweepTask|Cleans Up all non "Analytics" related parameters/ids
+|#1|[logRequestsToConsoleTask](tasks/logRequestsToConsoleTask)|Logs all requests to the console, for debugging pourposes
+|#2|[mapClientIdTask](tasks/mapClientIdTask)|Grabs the clientId (&cid) and attaches the value to the specified parameter
+|#3|[mapPayloadSizeTask](tasks/mapPayloadSizeTask)|Attaches the current payload size to the specified parameter
+|#4|[preventDuplicateTransactionsTask](tasks/preventDuplicateTransactionsTask)|Prevents Duplicate Purchases/transaations keeping a list of transactions on the cookies/localStorage
+|#5|[snowPlowStreamingTask](tasks/snowPlowStreamingTask)|Sends a copy of the payload to your SnowPlow Collector
+|#6|[sendToSecondaryMeasurementId](tasks/logRequestssendToSecondaryMeasurementIdoConsoleTask)|Sends a copy of the payload to a secondary account
+|#7|[piiScrubberTask](tasks/piiScrubberTask)|Loops all data in the payload redacting the PII Data
+|#8|[privacySweepTask](tasks/privacySweepTask)|Cleans Up all non "Analytics" related parameters/ids
 
 ## Adding / Loading Tasks
 We provide several ready to use tasks, you'll find them within the dist/tasks folder, they are offered in normal and minified version. 
