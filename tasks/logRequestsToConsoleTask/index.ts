@@ -3,7 +3,7 @@ import { RequestModel } from '../../types/RequestModel';
 /**
  * Prints the current payload state to the console.
  * 
- * @param payload - The payload object to be modified.
+ * @param request - The payload object to be modified.
  * @returns The modified payload object.
  */
 
