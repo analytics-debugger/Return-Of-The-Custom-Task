@@ -14,6 +14,12 @@ const preventDuplicateTransactionsTask = (
   request: RequestModel,
   storeName: string = '__ad_trans_dedup'
 ): RequestModel => {
+
+  if (!request) {
+    console.error('preventDuplicateTransactionsTask: Request is required.');
+    return request;
+  }
+
   const hasPurchaseEvents = request.events.some(e => e.en === 'purchase');
 
   if (hasPurchaseEvents) {

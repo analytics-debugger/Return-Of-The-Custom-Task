@@ -1,33 +1,38 @@
 // src/tasks/snowPlowStreamingTask.ts
 
-import { RequestModel } from "../../types/RequestModel";
+import { RequestModel } from '../../types/RequestModel';
 
 /**
  * Sends a copy of the payload to a Snowplow endpoint. 
  * 
- * @param payload - The payload object to be modified.
- * @param endpoint - SnowPlow Collector Endpoint.
+ * @param request - The request model to be modified.
+ * @param endpointHostname - SnowPlow Collector Endpoint Hostname.
  * @returns The modified payload object.
  */
 const snowPlowStreamingTask = (
-  payload: RequestModel,
-  endpoint: string,
-  scope: "event"
+  request: RequestModel,
+  endpointHostname: string
 ): RequestModel => {
-  if (!payload || !endpoint) {
-    throw new Error("Payload and endpoints are required.");
+  if (!request || !endpointHostname) {
+    console.error('snowPlowStreamingTask: Request and endpointHistname are required.');
+    return request;
   }
 
-  const vendor = "com.google.analytics";
-  const version = "v1";
-  const path = ((endpoint.substr(-1) !== "/") ? endpoint + "/" : endpoint) + vendor + "/" + version;
-  // Send the payload to the endpoint
-  const request = new XMLHttpRequest();
-  request.open("POST", path, true);
-  request.setRequestHeader("Content-type", "text/plain; charset=UTF-8");
-  request.send(new URLSearchParams(payload).toString());
+  const vendor = 'com.google.analytics';
+  const version = 'v1';
+  const fullEndpointUrl = ((endpointHostname.slice(-1) !== '/') ? endpointHostname + '/' : endpointHostname) + vendor + '/' + version;
 
-  return payload;
+  // Snowplow won't be handeling the requests will multiple events, so we will convert them to single requests
+  request.events.forEach((event) => {
+    const XMLRequest = new XMLHttpRequest();
+    XMLRequest.open('POST', fullEndpointUrl, true);
+    XMLRequest.setRequestHeader('Content-type', 'text/plain; charset=UTF-8');
+    const payload = Object.assign({}, request.sharedPayload, event);    
+    XMLRequest.send(new URLSearchParams(payload).toString());
+  });
+
+  // Send the payload to the endpoint 
+  return request;
 };
 
 export default snowPlowStreamingTask;
