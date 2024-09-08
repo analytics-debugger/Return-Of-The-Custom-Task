@@ -9,7 +9,7 @@ You may want to attach this value only to the an specific event names, you can p
 # Usage
 ## Task Code
 
-```var mapClientIdTask = (...) => {...}```
+```var mapClienmapPayloadSizetIdTask = (...) => {...}```
 > You can grab the code for this task from dist/tasks/ folder
 
 ## Code Example
@@ -29,4 +29,4 @@ var CustomTaskIntercept = new GA4CustomTask({
 |Parameter|Type|Description|
 |--|--|--|
 |name|string|The event parameter name to be used|
-|event_lists|Array[string]|Takes an array of events that will get the size attached to|
+|eventsList|Array[string]|Takes an array of events that will get the size attached to|
