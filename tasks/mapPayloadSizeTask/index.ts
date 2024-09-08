@@ -7,13 +7,13 @@ import { RequestModel } from '../../types/RequestModel';
  * 
  * @param request - The request model to be modified.
  * @param name - The name to be used as part of the new key in the payload.
- * @param events_list - The list of events where the size will be attached to
+ * @param eventsList - The list of events where the size will be attached to
  * @returns The modified payload object.
  */
 const mapPayloadSizeTask = (
   request: RequestModel,
   name: string,
-  events_list: Array<string>,
+  eventsList: Array<string>,
 ): RequestModel => {
 
   if (!request || !name) {
@@ -28,8 +28,8 @@ const mapPayloadSizeTask = (
 
   
   request.events.forEach((event) => {
-    if (events_list && events_list.length > 0) {
-      if (events_list.includes(event['en'])) {
+    if (eventsList && eventsList.length > 0) {
+      if (eventsList.includes(event['en'])) {
         event[key] = total_payload_size;
       }
     } else {
