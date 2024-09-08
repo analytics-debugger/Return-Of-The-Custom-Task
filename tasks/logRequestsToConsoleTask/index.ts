@@ -13,8 +13,8 @@ const logRequestsToConsoleTask = (request: RequestModel): RequestModel => {
     throw new Error("RequestModel is required.");
   }
 
-  console.group(`%cReturnOfTheCustomTask: New Request ( ${obj.events.length} Events )`, "color: purple; font-size: large; font-weight: bold;");
-  console.log(obj);
+  console.group(`%cReturnOfTheCustomTask: New Request ( ${request.events.length} Events )`, "color: purple; font-size: large; font-weight: bold;");
+  console.log(request);
   console.groupEnd();
   // Return back the request
   return request;
