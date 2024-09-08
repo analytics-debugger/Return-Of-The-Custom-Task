@@ -3,19 +3,18 @@
 
 # mapClientId Task
 
-This task will read the current clientId ( ```&cid``` )value and add it back as an ```event parameter``` to all events in the payload.
-In the other side if we set the scope as 'user' it will ba attached just to the first event on the request as an ```user property```.
+This task will read the current clientId ( ```&cid``` ) value from the request and map it back as an ```event parameter``` to all events in the payload.
+In the other side if we set the scope as ```'user'``` it will ba attached just to the first event on the request as an ```user property```.
 
 # Usage
 ## Task Code
 
 ```var mapClientIdTask = (...) => {...}```
-> You can grab the code for this task from dist/tasks/ folder 
+> You can grab the code for this task from dist/tasks/ folder
 
 ## Code Example
 ```
-
-var interceptCustomTask = new GA4CustomTask({
+var CustomTaskIntercept = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
   (requestModel) => mapClientIdTask(requestModel, 'client_id', 'event'), 
