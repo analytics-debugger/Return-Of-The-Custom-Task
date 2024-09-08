@@ -1,7 +1,7 @@
 // src/tasks/preventDuplicateTransactionsTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
-import storageHelper from '../../src/helpers/storageHelper';
+import { RequestModel } from "../../types/RequestModel";
+import storageHelper from "../../src/helpers/storageHelper";
 /**
  * Monitors purchase events and keeps track of transaction IDs to prevent duplicate transactions.
  * Used a synced dual localStorage and cookie storage to store transaction IDs.
@@ -11,36 +11,36 @@ import storageHelper from '../../src/helpers/storageHelper';
  * @returns The modified payload object.
  */
 const preventDuplicateTransactionsTask = function (
-    payload: RequestModel,
-    storeName: string = '__ad_trans_dedup'
+  payload: RequestModel,
+  storeName: string = "__ad_trans_dedup"
 ): RequestModel {
-    // Check if it's a purchase event
-    if (payload.en === "purchase") {
-        const transactionId: string = payload["ep.transaction_id"];
-        let alreadyTrackedTransactions: string[] = [];
+  // Check if it's a purchase event
+  if (payload.en === "purchase") {
+    const transactionId: string = payload["ep.transaction_id"];
+    let alreadyTrackedTransactions: string[] = [];
 
-        const storedValue = storageHelper.get(storeName);
-        if (storedValue) {
-            try {
-                alreadyTrackedTransactions = JSON.parse(storedValue) as string[];
-            } catch (error) {
-                console.error("Failed to parse stored transactions:", error);
-                alreadyTrackedTransactions = [];
-            }
-        }
-
-        // Check for duplicate transactions
-        if (!alreadyTrackedTransactions.includes(transactionId)) {
-            alreadyTrackedTransactions.push(transactionId);
-            storageHelper.set(storeName, JSON.stringify(alreadyTrackedTransactions));
-        } else {
-            // We add a __skip flag to skip this request
-            payload.__skip = true;
-        }
+    const storedValue = storageHelper.get(storeName);
+    if (storedValue) {
+      try {
+        alreadyTrackedTransactions = JSON.parse(storedValue) as string[];
+      } catch (error) {
+        console.error("Failed to parse stored transactions:", error);
+        alreadyTrackedTransactions = [];
+      }
     }
 
-    // Return the modified payload object
-    return payload;
+    // Check for duplicate transactions
+    if (!alreadyTrackedTransactions.includes(transactionId)) {
+      alreadyTrackedTransactions.push(transactionId);
+      storageHelper.set(storeName, JSON.stringify(alreadyTrackedTransactions));
+    } else {
+      // We add a __skip flag to skip this request
+      payload.__skip = true;
+    }
+  }
+
+  // Return the modified payload object
+  return payload;
 };
 
 export default preventDuplicateTransactionsTask;

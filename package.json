@@ -5,13 +5,18 @@
     "type": "module",
     "scripts": {
         "build": "rollup -c",
-        "watch": "rollup -c -w"
+        "watch": "rollup -c -w",
+        "lint": "eslint . --fix"
     },
     "devDependencies": {
+        "@eslint/js": "^9.10.0",
         "@rollup/plugin-terser": "^0.4.4",
+        "eslint": "^9.10.0",
+        "globals": "^15.9.0",
         "rollup": "^4.21.2",
         "rollup-plugin-dts": "^6.1.1",
-        "rollup-plugin-esbuild": "^6.1.1"
+        "rollup-plugin-esbuild": "^6.1.1",
+        "typescript-eslint": "^8.4.0"
     },
     "dependencies": {
         "@babel/plugin-transform-block-scoped-functions": "^7.24.7",

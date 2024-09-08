@@ -1,6 +1,6 @@
 // src/tasks/mapPayloadSizeTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
+import { RequestModel } from "../../types/RequestModel";
 
 /**
  * Adds a event parameter on the provided event property name with the size of the payload.
@@ -11,22 +11,21 @@ import { RequestModel } from '../../types/RequestModel';
  * @returns The modified payload object.
  */
 const mapPayloadSizeTask = (
-    payload: RequestModel,
-    name: string,
-    scope: 'event'
+  payload: RequestModel,
+  name: string,
 ): RequestModel => {
-    if (!payload) {
-        throw new Error('Payload is required.');
-    }
+  if (!payload) {
+    throw new Error("Payload is required.");
+  }
 
-    if (!name) {
-        throw new Error('Name is required.');
-    }
+  if (!name) {
+    throw new Error("Name is required.");
+  }
 
-    const key = `epn.${name}`;
-    payload[key] = new URLSearchParams(payload).toString().length;
+  const key = `epn.${name}`;
+  payload[key] = new URLSearchParams(payload).toString().length;
 
-    return payload;
+  return payload;
 };
 
 export default mapPayloadSizeTask;

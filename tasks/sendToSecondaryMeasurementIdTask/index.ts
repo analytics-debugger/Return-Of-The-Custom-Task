@@ -1,6 +1,6 @@
 // src/tasks/sendToSecondaryMeasurementId.ts
 
-import { RequestModel } from '../../types/RequestModel';
+import { RequestModel } from "../../types/RequestModel";
 
 /**
  * Holder for the sendToSecondaryMeasurementId function.
@@ -9,15 +9,15 @@ import { RequestModel } from '../../types/RequestModel';
 
  */
 const sendToSecondaryMeasurementId = (
-    payload: RequestModel,
+  payload: RequestModel,
 ): RequestModel => {
-    // Check if payload is provided
-    if (!payload) {
-        throw new Error('Payload is required.');
-    }
+  // Check if payload is provided
+  if (!payload) {
+    throw new Error("Payload is required.");
+  }
 
 
-    return payload;
+  return payload;
 };
 
 export default sendToSecondaryMeasurementId;

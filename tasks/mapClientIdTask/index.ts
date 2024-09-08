@@ -1,6 +1,6 @@
 // src/tasks/mapClientIdTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
+import { RequestModel } from "../../types/RequestModel";
 
 /**
  * Adds a client ID to the payload object to the specified event/property name and scope.
@@ -11,31 +11,31 @@ import { RequestModel } from '../../types/RequestModel';
  * @returns The modified payload object.
  */
 const mapClientIdTask = (
-    request: RequestModel,
-    name: string,
-    scope: 'event' | 'user' = 'event',    
+  request: RequestModel,
+  name: string,
+  scope: "event" | "user" = "event",    
 ): RequestModel => {
-    // Check if payload is provided
-    if (!request) {
-        throw new Error('Payload is required.');
-    }
+  // Check if payload is provided
+  if (!request) {
+    throw new Error("Payload is required.");
+  }
 
-    // Check if name is provided
-    if (!name) {
-        throw new Error('Name is required.');
-    }
+  // Check if name is provided
+  if (!name) {
+    throw new Error("Name is required.");
+  }
 
-    // Construct the new key based on the scope and name
-    const keyPrefix = scope === 'user' ? 'up.' : 'ep.';
-    const key = `${keyPrefix}${name}`;
+  // Construct the new key based on the scope and name
+  const keyPrefix = scope === "user" ? "up." : "ep.";
+  const key = `${keyPrefix}${name}`;
 
-    // Add the client ID to all the events
-    request.events.map((event) => {
-        event[key] = request.sharedPayload.cid;
-    }); 
+  // Add the client ID to all the events
+  request.events.map((event) => {
+    event[key] = request.sharedPayload.cid;
+  }); 
 
-    // Return the modified payload object
-    return request;
+  // Return the modified payload object
+  return request;
 };
 
 export default mapClientIdTask;

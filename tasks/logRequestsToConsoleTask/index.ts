@@ -1,4 +1,4 @@
-import { RequestModel } from '../../types/RequestModel';
+import { RequestModel } from "../../types/RequestModel";
 
 /**
  * Prints the current payload state to the console.
@@ -7,8 +7,8 @@ import { RequestModel } from '../../types/RequestModel';
  * @returns The modified payload object.
  */
 const logRequestsToConsoleTask = (request: RequestModel): RequestModel => {
-    console.log("ReturnOfTheCustomTask: Request", request);
-    return request;
+  console.log("ReturnOfTheCustomTask: Request", request);
+  return request;
 };
 
 export default logRequestsToConsoleTask;
