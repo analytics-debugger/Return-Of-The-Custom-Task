@@ -13,7 +13,7 @@ export default [
   },
   {
     "rules": {
-      "quotes": ["error", "double"],
+      "quotes": ["error", "single"],
       // we want to force semicolons
       "semi": ["error", "always"],
       // we use 2 spaces to indent our code

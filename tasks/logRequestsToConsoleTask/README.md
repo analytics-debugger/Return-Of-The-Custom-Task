@@ -4,13 +4,17 @@
 
 This task will print the current request state to the console. Useful for debugging pourposes.
   
+# Parameters
+ This task doesn't accept any parameters.
+ 
 # Usage
 
 > You can grab the code for this task from dist/tasks/ folder
 
 ```var logRequestsToConsoleTask = () => {...}```
 
-Then we pass it back as a task. This task doesn't accept any parameters.
+
+Then we pass it back as a task.
 
 ```
 var interceptCustomTask = new GA4CustomTask({
