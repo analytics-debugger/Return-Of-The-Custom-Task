@@ -1,46 +1,50 @@
 // src/tasks/preventDuplicateTransactionsTask.ts
 
-import { RequestModel } from "../../types/RequestModel";
-import storageHelper from "../../src/helpers/storageHelper";
+import { RequestModel } from '../../types/RequestModel';
+import storageHelper from '../../src/helpers/storageHelper';
 /**
  * Monitors purchase events and keeps track of transaction IDs to prevent duplicate transactions.
  * Used a synced dual localStorage and cookie storage to store transaction IDs.
  * 
- * @param payload - The payload object to be modified.
+ * @param request - The request model to be modified.
  * @param storeName - The storage type to be used. Defaults to 'cookie'.
  * @returns The modified payload object.
  */
-const preventDuplicateTransactionsTask = function (
-  payload: RequestModel,
-  storeName: string = "__ad_trans_dedup"
-): RequestModel {
-  // Check if it's a purchase event
-  if (payload.en === "purchase") {
-    const transactionId: string = payload["ep.transaction_id"];
+const preventDuplicateTransactionsTask = (
+  request: RequestModel,
+  storeName: string = '__ad_trans_dedup'
+): RequestModel => {
+  const hasPurchaseEvents = request.events.some(e => e.en === 'purchase');
+
+  if (hasPurchaseEvents) {
     let alreadyTrackedTransactions: string[] = [];
+    
+    try {
+      const storedTransactions = storageHelper.get(storeName);
+      alreadyTrackedTransactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+    } catch (error) {
+      console.error('Failed to parse stored transactions:', error);
+    }
 
-    const storedValue = storageHelper.get(storeName);
-    if (storedValue) {
-      try {
-        alreadyTrackedTransactions = JSON.parse(storedValue) as string[];
-      } catch (error) {
-        console.error("Failed to parse stored transactions:", error);
-        alreadyTrackedTransactions = [];
+    // Remove duplicate purchase events
+    request.events = request.events.filter(event => {
+      if (event.en === 'purchase' && alreadyTrackedTransactions.includes(event['ep.transaction_id'])) {
+        return false; // Remove this event
       }
-    }
+      alreadyTrackedTransactions.push(event['ep.transaction_id']); // Add to tracked transactions
+      return true; // Keep this event
+    });
 
-    // Check for duplicate transactions
-    if (!alreadyTrackedTransactions.includes(transactionId)) {
-      alreadyTrackedTransactions.push(transactionId);
-      storageHelper.set(storeName, JSON.stringify(alreadyTrackedTransactions));
-    } else {
-      // We add a __skip flag to skip this request
-      payload.__skip = true;
-    }
+    // Write the new transactions to Storage
+    storageHelper.set(storeName, JSON.stringify(alreadyTrackedTransactions));
   }
-
-  // Return the modified payload object
-  return payload;
+  
+  if(request.events.length === 0) {
+    // So it seems that all events were removed, there's no need to even sent this request
+    request.__skip = true;
+  } 
+  return request;
 };
+
 
 export default preventDuplicateTransactionsTask;

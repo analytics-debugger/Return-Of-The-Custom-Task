@@ -25,8 +25,8 @@ var CustomTaskIntercept = new GA4CustomTask({
 
 ### Parameters
 
-```mapClientIdTask(requestModel, {{NAME}}, {{SCOPE}})```
-|Parameter|Description|
-|--|--|
-|name|It's the event-property or user parameter key that will be used|
-|scope|Event or User. 'event' will be used by default|
+```mapClientIdTask(requestModel, '{{NAME}}', '{{SCOPE}}')```
+|Parameter|Type|Description|
+|--|--|--|
+|name|string|It's the event-property or user parameter key that will be used|
+|scope|string|Event or User. 'event' will be used by default|

@@ -1,31 +1,44 @@
 // src/tasks/mapPayloadSizeTask.ts
 
-import { RequestModel } from "../../types/RequestModel";
+import { RequestModel } from '../../types/RequestModel';
 
 /**
  * Adds a event parameter on the provided event property name with the size of the payload.
  * 
- * @param payload - The payload object to be modified.
+ * @param request - The request model to be modified.
  * @param name - The name to be used as part of the new key in the payload.
- * @param scope - The scope determines the prefix of the new key. Defaults to 'event'.
+ * @param events_list - The list of events where the size will be attached to
  * @returns The modified payload object.
  */
 const mapPayloadSizeTask = (
-  payload: RequestModel,
+  request: RequestModel,
   name: string,
+  events_list: Array<string>,
 ): RequestModel => {
-  if (!payload) {
-    throw new Error("Payload is required.");
-  }
 
-  if (!name) {
-    throw new Error("Name is required.");
+  if (!request || !name) {
+    console.error('mapPayloadSizeTask: Request and name are required.');
+    return request;
   }
 
   const key = `epn.${name}`;
-  payload[key] = new URLSearchParams(payload).toString().length;
+  const total_payload_size = request.events.reduce((total_evt_size, event_payload) => { 
+    return total_evt_size + new URLSearchParams(event_payload).toString().length;
+  }, new URLSearchParams(request.sharedPayload || '').toString().length);
 
-  return payload;
+  
+  request.events.forEach((event) => {
+    if (events_list && events_list.length > 0) {
+      if (events_list.includes(event['en'])) {
+        event[key] = total_payload_size;
+      }
+    } else {
+      event[key] = total_payload_size;
+    }
+  });
+
+  return request;
+
 };
 
 export default mapPayloadSizeTask;

@@ -5,7 +5,7 @@ import { RequestModel } from '../../types/RequestModel';
 /**
  * Adds a client ID to the payload object to the specified event/property name and scope.
  * 
- * @param payload - The payload object to be modified.
+ * @param request - The request model to be modified.
  * @param name - The name to be used as part of the new key in the payload.
  * @param scope - The scope determines the prefix of the new key. Defaults to 'event'.
  * @returns The modified payload object.
@@ -17,7 +17,7 @@ const mapClientIdTask = (
 ): RequestModel => {
   // Check if payload is provided
   if (!request) {
-    throw new Error('Payload is required.');
+    throw new Error('Request is required.');
   }
 
   // Check if name is provided
