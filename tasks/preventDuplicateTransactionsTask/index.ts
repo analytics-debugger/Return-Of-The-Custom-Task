@@ -1,24 +1,50 @@
-// src/tasks/privacySweepTask.ts
+// src/tasks/preventDuplicateTransactionsTask.ts
 
 import { RequestModel } from '../../types/RequestModel';
+import storageHelper from '../../src/helpers/storageHelper';
 /**
- * Removes all parameters that are not privacy friendly or that are not reported on Google Analytics 4 in any way.
+ * Monitors purchase events and keeps track of transaction IDs to prevent duplicate transactions.
+ * Used a synced dual localStorage and cookie storage to store transaction IDs.
  * 
  * @param request - The request model to be modified.
+ * @param storeName - The storage type to be used. Defaults to 'cookie'.
  * @returns The modified payload object.
  */
-
-const privacySweepTask = (
-  request: RequestModel
+const preventDuplicateTransactionsTask = (
+  request: RequestModel,
+  storeName: string = '__ad_trans_dedup'
 ): RequestModel => {
-  const blacklistedParams = ['ecid', 'ur', 'are', 'frm', 'pscdl','tfd','tag_exp', 'dma', 'dma_cps', 'gcd', 'gcs', 'gsu', 'gcut', 'gcid', 'gclsrc', 'gclid', 'gaz', 'us_privacy', 'gdpr', 'gdpr_consent', 'us_privacy', '_geo', '_rdi', '_uie', '_uc'];
-  request.sharedPayload = Object.keys(obj)
-    .filter(key => !blacklistedParams.includes(key))
-    .reduce((acc, key) => {
-      acc[key] = obj[key];
-      return acc;
-    }, {});  
+  const hasPurchaseEvents = request.events.some(e => e.en === 'purchase');
+
+  if (hasPurchaseEvents) {
+    let alreadyTrackedTransactions: string[] = [];
+    
+    try {
+      const storedTransactions = storageHelper.get(storeName);
+      alreadyTrackedTransactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+    } catch (error) {
+      console.error('Failed to parse stored transactions:', error);
+    }
+
+    // Remove duplicate purchase events
+    request.events = request.events.filter(event => {
+      if (event.en === 'purchase' && alreadyTrackedTransactions.includes(event['ep.transaction_id'])) {
+        return false; // Remove this event
+      }
+      alreadyTrackedTransactions.push(event['ep.transaction_id']); // Add to tracked transactions
+      return true; // Keep this event
+    });
+
+    // Write the new transactions to Storage
+    storageHelper.set(storeName, JSON.stringify(alreadyTrackedTransactions));
+  }
+  
+  if(request.events.length === 0) {
+    // So it seems that all events were removed, there's no need to even sent this request
+    request.__skip = true;
+  } 
   return request;
 };
 
-export default privacySweepTask;
+
+export default preventDuplicateTransactionsTask;

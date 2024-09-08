@@ -1,23 +1,18 @@
-// src/tasks/sendToSecondaryMeasurementId.ts
+// src/tasks/sendToSecondaryMeasurementIdTask.ts
 
-import { RequestModel } from "../../types/RequestModel";
-
+import { RequestModel } from '../../types/RequestModel';
 /**
- * Holder for the sendToSecondaryMeasurementId function.
+ * Removes all parameters that are not privacy friendly or that are not reported on Google Analytics 4 in any way.
  * 
- * @param payload - The payload object to be modified.
-
+ * @param request - The request model to be modified.
+ * @returns The modified payload object.
  */
-const sendToSecondaryMeasurementId = (
-  payload: RequestModel,
+
+const sendToSecondaryMeasurementIdTask = (
+  request: RequestModel
 ): RequestModel => {
-  // Check if payload is provided
-  if (!payload) {
-    throw new Error("Payload is required.");
-  }
 
-
-  return payload;
+  return request;
 };
 
-export default sendToSecondaryMeasurementId;
+export default privacysendToSecondaryMeasurementIdTaskSweepTask;
