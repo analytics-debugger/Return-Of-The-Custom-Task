@@ -3,101 +3,114 @@
 import { RequestModel } from '../../types/RequestModel';
 
 /**
- * Holder for the piiScrubberTask function.
+ * Sends a copy of the payload to a Snowplow endpoint. 
  * 
- * @param payload - The payload object to be modified.
-
+ * @param request - The request model to be modified.
+ * @param queryParamsBlackList - Array of Measurement IDs to send a copy to
+ * @param callback - function to be called after scrubbing
+ * @param logScrubbing -log scrubbing details
+ * @returns The modified payload object.
  */
+const piiScrubberTask = (
+  request: RequestModel,
+  queryParamsBlackList?: string[],
+  callback?: (scrubbedFields: string[]) => void,
+  logScrubbing: boolean = false
+): RequestModel => {
+  if (!request) {
+    console.error('piiScrubberTask: Request is required.');
+    return request;
+  }
 
-const piiScrubber = function(payload, queryParamsBlackList, _, callback, logScrubbing) {
-  
-  const defaultBlackListedQueryStringParameters = ['email', 'mail', 'name', 'surname'];
+  const blackListedQueryStringParameters = ['email', 'mail', 'name', 'surname'];
   if (Array.isArray(queryParamsBlackList)) {
     queryParamsBlackList.forEach(param => {
-      if (defaultBlackListedQueryStringParameters.indexOf(param) === -1) {
-        defaultBlackListedQueryStringParameters.push(param);
+      if (!blackListedQueryStringParameters.includes(param)) {
+        blackListedQueryStringParameters.push(param);
       }
     });
   }
 
   const scrubPatterns = {
-    email: { regex: /[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+/, replacement: '[email_redacted]' },
-    ukpc: { regex: /[A-Za-z][A-Ha-hJ-Yj-y]?[0-9][A-Za-z0-9]? ?[0-9][A-Za-z]{2}|[Gg][Ii][Rr] ?0[Aa]{2}/, replacement: '[uk_postal_code_redacted]' },
-    ssn: { regex: /\b^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}\b/, replacement: '[ssn_redacted]' }
+    email: {
+      regex: /[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+/,
+      replacement: '[email_redacted]'
+    },
+    ukpc: {
+      regex: /[A-Za-z][A-Ha-hJ-Yj-y]?[0-9][A-Za-z0-9]? ?[0-9][A-Za-z]{2}|[Gg][Ii][Rr] ?0[Aa]{2}/,
+      replacement: '[uk_postal_code_redacted]'
+    },
+    ssn: {
+      regex: /\b^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}\b/,
+      replacement: '[ssn_redacted]'
+    }
   };
 
-  // Parse the query string into key-value pairs
-  const keyValues = queryString.replace(/(^\?)/, '').split('&').reduce((obj, param) => {
-    const [key, value] = param.split('=');
-    obj[key] = decodeURIComponent(value);
-    return obj;
-  }, {});
+  const scrubbedValues: { [key: string]: any } = {};
+  const scrubbedFields: string[] = [];
 
-  // Define the regex for valid keys (u)
-  const validKeyRegex = new RegExp([
-    '^(', 
-    ['dl','dp','dt','dh','dr','ec','ea','el','sn','sa','st','uid'].join('|'), 
-    ')$'
-  ].join(''), 'i');
-
-  const scrubbedValues = {};
-  const scrubbedFields = [];
-
-  Object.entries(keyValues).forEach(([key, value]) => {
-    if (key.match(validKeyRegex)) {
-      // Check if value matches any PII pattern
+  const scrubData = (data: { [key: string]: any }, origin: string) => {
+    Object.entries(data).forEach(([key, value]) => {
       Object.entries(scrubPatterns).forEach(([type, { regex, replacement }]) => {
-        if (value.match(regex)) {
+        if (regex.test(value)) {
           scrubbedValues[key] = {
+            origin,
+            rule: `matched: ${type}`,
             original: value,
             scrubbed: value.replace(regex, replacement)
           };
-          value = value.replace(regex, replacement);
+          data[key] = value.replace(regex, replacement);
+          scrubbedFields.push(key);
         }
       });
 
-      // Check for sensitive query string parameters in URLs
-      if (value.match(/http/)) {
-        scrubKeys.forEach(param => {
-          const paramRegex = new RegExp('(([\\?&]' + param + '=)[^&/?]+)', 'gi');
-          if (value.match(paramRegex)) {
-            scrubbedValues[key] = scrubbedValues[key] || { original: value };
-            value = value.replace(paramRegex, '$2removed');
-            scrubbedValues[key].scrubbed = value;
-          }
-        });
+      // Handle URLs in query parameters
+      if (typeof value === 'string' && value.includes('http')) {
+        try {
+          const url = new URL(value);
+          const params = new URLSearchParams(url.search);
+
+          blackListedQueryStringParameters.forEach(param => {
+            if (params.has(param)) {
+              params.set(param, 'parameter_removed');
+              scrubbedValues[key] = {
+                origin,
+                rule: 'blacklisted parameter',
+                original: value,
+                scrubbed: url.toString()
+              };
+              scrubbedFields.push(param);
+            }
+          });
+
+          url.search = params.toString();
+          data[key] = url.toString();
+        } catch (e) {
+          console.error('Invalid URL:', value);
+        }
       }
+    });
+  };
 
-      // Update scrubbed values
-      keyValues[key] = value;
-    }
-  });
+  // Scrub sharedPayload
+  scrubData(request.sharedPayload, 'sharedPayload');
 
+  // Scrub events
+  request.events.forEach(event => scrubData(event, 'events'));
+
+  // Call the callback if it's a function
   if (callback && scrubbedFields.length > 0) {
     callback(scrubbedFields);
   }
 
-  if (logScrubbing && Object.keys(scrubbedValues).length) {
+  // Log scrubbing details if required
+  if (logScrubbing && Object.keys(scrubbedValues).length > 0) {
     console.groupCollapsed('PII Scrubber: Scrubbed Data');
     console.log(scrubbedValues);
     console.groupEnd();
   }
 
-  return Object.keys(keyValues).map(key => key + '=' + encodeURIComponent(keyValues[key])).join('&');
-};
-
-
-
-const piiScrubberTask = (
-  payload: RequestModel,
-): RequestModel => {
-  // Check if payload is provided
-  if (!payload) {
-    throw new Error('Payload is required.');
-  }
-
-
-  return payload;
+  return request;
 };
 
 export default piiScrubberTask;
