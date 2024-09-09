@@ -45,6 +45,42 @@ intercepted.
 
 Also, if there's no tasks nothing will be intercepted.
 
+# Building your own Task
+You can create your own custom tasks. By default, the library provides a `RequestModel` interface, which includes `sharedPayload` and `events` in object format. The library handles:
+
+- Parsing the request type (GET/POST)
+- Managing multiple events
+- Constructing the final fetch request for your convenience
+
+
+```
+interface RequestModel {
+    sharedPayload: { [key: string]: any };
+    events: { [key: string]: any }[];
+    __skip?: boolean;
+}
+```
+
+```
+const myCustomTask = (request: RequestModel,  name: string): RequestModel => {
+  // Your Code
+  return request;
+};
+```
+
+The task expects you to return the RequestModel back. 
+This is a very simple example that just logs the requests
+
+```
+var mySimpleCustomTask = (request) => {
+    console.log("NEW GA4 REQUEST", request);
+    return request;
+}
+```
+
+Original Fetch object is available at ```GA4CustomTask.originalFetch``` for your convenience.
+You can take a look to tasks folder to see more examples.
+
 # Available Tasks List
 
 ||Task Name|Description|
