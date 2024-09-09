@@ -44,7 +44,7 @@ This task removes any parameters that aren't directly related to Analytics, such
 ## Code Example
 
 ```
-var CustomTaskIntercept = new GA4CustomTask({
+var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
   privacySweepTask 

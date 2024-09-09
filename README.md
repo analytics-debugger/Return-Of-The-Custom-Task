@@ -62,7 +62,7 @@ interface RequestModel {
 ```
 
 ```
-const myCustomTask = (request: RequestModel,  name: string): RequestModel => {
+const myCustomTask = (request: RequestModel): RequestModel => {
   // Your Code
   return request;
 };
@@ -77,6 +77,25 @@ var mySimpleCustomTask = (request) => {
     return request;
 }
 ```
+
+If you need to pass parameters
+
+```
+const myCustomTaskWithParams = (request: RequestModel, name: string): RequestModel => {
+  // your logic
+  return request;
+};
+```
+
+```
+var GA4CustomTaskInstance = new GA4CustomTask({
+ allowedMeasurementIds: ["G-DEBUGEMALL"],
+ tasks: [
+  (requestModel) => myCustomTaskWithParams(requestModel, 'myNameParamValue'), 
+ ]
+});
+```
+
 
 Original Fetch object is available at ```GA4CustomTask.originalFetch``` for your convenience.
 You can take a look to tasks folder to see more examples.

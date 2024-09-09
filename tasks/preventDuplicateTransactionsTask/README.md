@@ -20,7 +20,7 @@ removed from the payload.
 
 ## Code Example
 ```
-var CustomTaskIntercept = new GA4CustomTask({
+var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
   (requestModel) => preventDuplicateTransactions(requestModel, '__transaction_cookie'), 

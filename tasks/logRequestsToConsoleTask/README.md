@@ -17,7 +17,7 @@ This task will print the current request state to the console. Useful for debugg
 Then we pass it back as a task.
 
 ```
-var interceptCustomTask = new GA4CustomTask({
+var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
   logRequestsToConsoleTask

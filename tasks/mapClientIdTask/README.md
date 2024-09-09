@@ -14,7 +14,7 @@ In the other side if we set the scope as ```'user'``` it will ba attached just t
 
 ## Code Example
 ```
-var CustomTaskIntercept = new GA4CustomTask({
+var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
   (requestModel) => mapClientIdTask(requestModel, 'client_id', 'event'), 

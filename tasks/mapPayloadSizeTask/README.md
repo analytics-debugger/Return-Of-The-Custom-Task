@@ -14,7 +14,7 @@ You may want to attach this value only to the an specific event names, you can p
 
 ## Code Example
 ```
-var CustomTaskIntercept = new GA4CustomTask({
+var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
   (requestModel) => mapPayloadSize(requestModel, 'payload_size',  ['add_to_cart','purchase']), 

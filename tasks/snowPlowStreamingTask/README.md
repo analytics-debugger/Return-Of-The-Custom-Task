@@ -13,7 +13,7 @@ This task will loop through all your request to find any PII
 
 ## Code Example
 ```
-var CustomTaskIntercept = new GA4CustomTask({
+var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
    (requestModel) => snowPlowStreaming(requestModel,  endpointHostname),
