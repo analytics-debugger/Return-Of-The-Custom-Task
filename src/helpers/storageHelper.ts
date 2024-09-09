@@ -6,15 +6,15 @@ interface StorageHelper {
   
 const storageHelper: StorageHelper = {
   sync(name: string): void {
-    const cookie = document.cookie.split("; ").find(row => row.startsWith(name + "="));
+    const cookie = document.cookie.split('; ').find(row => row.startsWith(name + '='));
     const valueFromLocalStorage = localStorage.getItem(name);
       
-    const valueFromCookie = cookie ? cookie.split("=")[1] : null;
+    const valueFromCookie = cookie ? cookie.split('=')[1] : null;
       
     if (valueFromCookie !== null) {
       const decodedValue = decodeURIComponent(valueFromCookie);
-      const timestampFromCookie = parseInt(decodedValue.split(":")[0], 10);
-      const timestampFromLocalStorage = valueFromLocalStorage ? parseInt(valueFromLocalStorage.split(":")[0], 10) : 0;
+      const timestampFromCookie = parseInt(decodedValue.split(':')[0], 10);
+      const timestampFromLocalStorage = valueFromLocalStorage ? parseInt(valueFromLocalStorage.split(':')[0], 10) : 0;
       
       if (timestampFromCookie > timestampFromLocalStorage) {
         localStorage.setItem(name, decodedValue);
@@ -34,10 +34,10 @@ const storageHelper: StorageHelper = {
   get(name: string): string | null {
     this.sync(name);
     const value = localStorage.getItem(name);
-    return value ? value.split(":")[1] || null : null;
+    return value ? value.split(':')[1] || null : null;
   },
   
-  set(name: string, value: string, days: number = 7, path: string = "/", domain: string = ""): void {
+  set(name: string, value: string, days: number = 7, path: string = '/', domain: string = ''): void {
     const timestamp = Date.now();
     const valueWithTimestamp = `${timestamp}:${value}`;
       
