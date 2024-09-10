@@ -7,15 +7,15 @@ import { rollup } from 'rollup';
 import { performance } from 'perf_hooks';
 
 console.log('Building Started');
+
 // Remove dist folder before build
 const mainDistDir = 'dist';
 if (fs.existsSync(mainDistDir)) {
   fs.rmSync(mainDistDir, { recursive: true, force: true }); // Removes the dist folder and all its contents
   console.log('Removed dist folder');
-}else{
+} else {
   console.log('dist folder not found, skip deleting');
 }
-
 
 // Tasks directories
 const srcDir = 'tasks';
@@ -28,14 +28,14 @@ if (!fs.existsSync(distDir)) {
 
 // Get all TypeScript files from srcDir
 const files = fs.readdirSync(srcDir)
+  .filter(dir => fs.statSync(path.join(srcDir, dir)).isDirectory())
   .map(dir => path.join(srcDir, dir, 'index.ts'))
   .filter(filePath => fs.existsSync(filePath));
 
 // Create Rollup configurations dynamically
 const configs = files.map(file => {
-  
-  const fileOutputName = file.split('\\')[1];
-  
+  const fileOutputName = path.basename(path.dirname(file)); // Extracts directory name as output name
+
   return {    
     input: file,
     plugins: [
@@ -52,23 +52,23 @@ const configs = files.map(file => {
         format: 'iife',
         sourcemap: false,
         exports: 'default',
-        name: fileOutputName,
+        name: fileOutputName, // Set the output name for IIFE
       },
       {
         file: path.join(distDir, `${fileOutputName}.min.js`),
         format: 'iife',
         sourcemap: false,
         exports: 'default',
-        name: fileOutputName,
+        name: fileOutputName, // Set the output name for IIFE
         plugins: [terser()] // Minified version
       }
     ],
   };
 });
 
-
+// Add main entry configuration
 configs.push({
-  input: path.join('src/', 'index.js'),
+  input: path.join('src', 'index.js'),
   cache: false, // Disable cache to avoid stale results
   plugins: [
     babel({
@@ -78,13 +78,13 @@ configs.push({
         [
           '@babel/preset-env',
           {
-            'targets': {
-              'esmodules': false,
-              'ie': '11' // or your desired browser versions
+            targets: {
+              esmodules: false,
+              ie: '11' // or your desired browser versions
             },
-            'loose': true, // Use simpler transformations, reduces helpers
-            'useBuiltIns': false, // Skip automatic polyfill injection
-            'exclude': [
+            loose: true, // Use simpler transformations, reduces helpers
+            useBuiltIns: false, // Skip automatic polyfill injection
+            exclude: [
               'transform-function-name', // Skips naming helpers
               'transform-spread', // Avoid transforming array spread/rest
               'transform-arrow-functions',
@@ -123,7 +123,6 @@ configs.push({
     }
   ],
 });
-
 
 // Collect build statistics
 const buildStats = {};
