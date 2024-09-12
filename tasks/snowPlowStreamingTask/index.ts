@@ -8,6 +8,8 @@ import { RequestModel } from '../../types/RequestModel';
  * @param request - The request model to be modified.
  * @param endpointHostname - SnowPlow Collector Endpoint Hostname.
  * @returns The modified payload object.
+ * 
+ * Based on https://docs.snowplow.io/docs/collecting-data/collecting-from-own-applications/google-analytics-plugin/
  */
 const snowPlowStreamingTask = (
   request: RequestModel,

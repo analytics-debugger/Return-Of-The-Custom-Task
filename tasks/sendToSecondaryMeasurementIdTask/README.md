@@ -1,44 +1,14 @@
 ![ReturnoftheCustomTask](https://github.com/user-attachments/assets/92f0b278-1d0e-4d62-a289-2ac203eefc25)
 
-# privacySweep Task
+# sendToSecondaryMeasurementId Task
 
-This task removes any parameters that aren't directly related to Analytics, such as IDs other than the clientId or any other values that aren't relevant to Google Analytics 4.
-
-## Current cleaned up parameters
-
-| Key            |
-|----------------|
-| ecid           |
-| ur             |
-| are            |
-| frm            |
-| pscdl          |
-| tfd            |
-| tag_exp        |
-| dma            |
-| dma_cps        |
-| gcd            |
-| gcs            |
-| gsu            |
-| gcut           |
-| gcid           |
-| gclsrc         |
-| gclid          |
-| gaz            |
-| us_privacy     |
-| gdpr           |
-| gdpr_consent   |
-| us_privacy     |
-| _geo           |
-| _rdi           |
-| _uie           |
-| _uc            |
+This task will send a duplicate hit to the defined alternative Measurement Ids
 
 # Usage
 
 ## Task Code
 
-```var privacySweepTask = (...) => {...}```
+```var sendToSecondaryMeasurementId = (...) => {...}```
 > You can grab the code for this task from dist/tasks/ folder
 
 ## Code Example
@@ -47,11 +17,17 @@ This task removes any parameters that aren't directly related to Analytics, such
 var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
-  privacySweepTask 
+  (requestModel) => sendToSecondaryMeasurementId(requestModel, '["G-SECONDID"]', [], []), 
  ]
 });
 ```
 
 ### Parameters
+  
+```sendToSecondaryMeasurementId(requestModel, toMeasurementIds)```
+|Parameter|Type|Description|
+|--|--|--|
+|toMeasurementIds|string[]|The array of measurement that will be getting a copy|
+|whiteListedEvents|string[]|List of event names that will be replicated to the accounts, not defining this value or it being an empty array will mean all will be send|
+|blackListedEvents|string[]|In case ```whiteListedEvents``` is not defined, or holding an empty array, will these events to be removed from payloads before sending a copy|
 
-No parameters accepted
