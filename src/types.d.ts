@@ -9,8 +9,13 @@ interface Event {
   [key: string]: any; // Additional dynamic properties with any key and value
 }
 
-interface FetchOptions extends RequestInit {
-  body?: string; // Explicitly include `body` if it's used
+type FetchArgs = [RequestInfo | URL, RequestInit?];
+
+interface Interceptor {
+    request?: (...args: FetchArgs) => FetchArgs | Promise<FetchArgs>;
+    requestError?: (error: any) => any;
+    response?: (response: Response) => Response | Promise<Response>;
+    responseError?: (error: any) => any;
 }
 
 interface GA4CustomTaskSettings {
