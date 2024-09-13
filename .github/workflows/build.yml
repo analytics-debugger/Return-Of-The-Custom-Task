@@ -32,6 +32,20 @@ jobs:
       - name: Archive Dist Folder
         run: tar -czf dist.tar.gz -C dist .
 
+      - name: Get Package Version
+        id: get_version
+        run: echo "VERSION=$(node -p -e "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Create Tag
+        id: create_tag
+        run: |
+          echo "Creating tag: $VERSION"
+          git tag $VERSION
+          git push origin $VERSION
+        env:
+          VERSION: ${{ env.VERSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         id: create_release
         if: startsWith(github.ref, 'refs/tags/')
