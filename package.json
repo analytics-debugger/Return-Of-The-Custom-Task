@@ -1,7 +1,9 @@
 {
     "name": "the-return-of-the-custom-task",
     "private": true,
+    "author": "David Vallejo <david@> (https://www.thyngster.com/)",
     "version": "0.0.1",
+    "license": "Apache-2.0",
     "type": "module",
     "scripts": {
         "build": "rollup -c",
@@ -30,5 +32,14 @@
         "fetch-intercept": "^2.4.0",
         "rollup-plugin-delete": "^2.0.0",
         "tslib": "^2.7.0"
-    }
-}
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/thyngster"
+        },
+        {
+            "type": "individual",
+            "url": "https://ko-fi.com/thyngster"
+        }
+    ]
