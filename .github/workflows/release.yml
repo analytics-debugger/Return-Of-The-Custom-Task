@@ -15,15 +15,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '20'  # Specify Node.js 20
+
+      - name: Install pnpm
+        run: |
+          npm install -g pnpm
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build project
-        run: npm run build
+        run: pnpm run build
 
       - name: Create a version tag
+        id: tag
         run: |
           version=$(node -p "require('./package.json').version")
           echo "VERSION=$version" >> $GITHUB_ENV
@@ -33,6 +38,6 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: 'dist/**'
+          files: 'dist/**'  # Include all files in the dist folder
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
