@@ -32,21 +32,7 @@ jobs:
       - name: Get Package Version
         id: get_version
         run: echo "VERSION=$(node -p -e "require('./package.json').version")" >> $GITHUB_ENV
-
-      - name: Create Tag
-        id: create_tag
-        run: |
-          git tag $VERSION
-          git push origin $VERSION
-        env:
-          VERSION: ${{ env.VERSION }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Debug Info
-        run: |
-          echo "Git ref: ${{ github.ref }}"
-          echo "Version: $VERSION"
-
+        
       - name: Create Release
         id: create_release
         if: startsWith(github.ref, 'refs/tags/')
@@ -70,3 +56,5 @@ jobs:
               --data-binary @"$file" \
               "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
           done
+
+          
