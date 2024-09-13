@@ -27,16 +27,21 @@ jobs:
         run: pnpm run build
 
       - name: Create and push version tag
+        id: tag
         run: |
           version=$(node -p "require('./package.json').version")
-          # Delete existing tag if it exists
-          git tag -d $version || true
-          git push origin :refs/tags/$version || true
-          # Create and push new tag
-          git tag $version
-          git push origin $version
+          echo "VERSION=$version" >> $GITHUB_ENV
+          # Check if tag already exists
+          if git ls-remote --tags origin | grep -q "refs/tags/$version"; then
+            echo "Tag $version already exists. Skipping tag creation."
+          else
+            # Create and push new tag
+            git tag $version
+            git push origin $version
+          fi
 
       - name: Create GitHub release
+        if: ${{ steps.tag.outputs.VERSION }}
         uses: softprops/action-gh-release@v1
         with:
           files: 'dist/**'
