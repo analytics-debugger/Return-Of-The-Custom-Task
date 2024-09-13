@@ -3,10 +3,10 @@ name: Build Library
 on:
   push:
     branches:
-      - main  # or the branch you want to build on
+      - main
   pull_request:
     branches:
-      - main  # or the branch you want to build on
+      - main
 
 jobs:
   build:
