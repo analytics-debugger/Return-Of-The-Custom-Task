@@ -30,7 +30,7 @@ jobs:
 
       - name: Create and push version tag
         id: tag
-        if: github.ref == 'refs/heads/main'  # Only create tag on main branch pushes
+        if: github.ref == 'refs/heads/main'
         run: |
           version=$(node -p "require('./package.json').version")
           echo "VERSION=$version" >> $GITHUB_ENV
