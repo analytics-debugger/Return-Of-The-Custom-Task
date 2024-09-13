@@ -1,0 +1,69 @@
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DEBUGEMALL"></script>
+<script>
+
+   window.dataLayer = window.dataLayer || [];
+   
+   function gtag(){dataLayer.push(arguments);}
+   gtag('js', new Date());
+   gtag('config', 'G-DEBUGEMALL', {
+       send_page_view: true
+   });
+
+
+</script>
+<script>
+!function(e,n){"object"==typeof exports&&"undefined"!=typeof module?module.exports=n():"function"==typeof define&&define.amd?define(n):(e="undefined"!=typeof globalThis?globalThis:e||self).GA4CustomTask=n()}(this,(function(){"use strict";function e(n){if(!n||!n.tasks)throw new Error("Invalid settings: tasks are required");function r(r,t){var o=!1;try{if("string"==typeof r&&function(e){try{var n=new URL(e),r=new URLSearchParams(n.search),t=r.get("tid"),o=r.get("cid"),i=r.get("v");return!!t&&t.startsWith("G-")&&!!o&&"2"===i}catch(e){return console.error("Error parsing URL:",e),!1}}(r)){var i=new URL(r),a={endpoint:i.origin+i.pathname,sharedPayload:null,events:[]},c=Array.from(new URLSearchParams(i.search).entries());t.body?(a.sharedPayload=Object.fromEntries(c),a.events=t.body.split("\r\n").map((function(e){return Object.fromEntries(new URLSearchParams(e).entries())}))):(a.sharedPayload=Object.fromEntries(c.slice(0,c.findIndex((function(e){return"en"===e[0]})))),a.events=[Object.fromEntries(c.slice(c.findIndex((function(e){return"en"===e[0]}))))]);var s=Object.fromEntries(new URLSearchParams(i.search));if(n.allowedMeasurementIds&&Array.isArray(n.allowedMeasurementIds)&&!n.allowedMeasurementIds.includes(s.tid))return e.originalFetch(r,t);Array.isArray(n.tasks)&&n.tasks.forEach((function(n){"function"==typeof n?a=n.call({originalFetch:e.originalFetch},a):console.warn("Callback is not a function:",n)})),a.events&&0===a.events.length&&(o=!0);var d=function(e){var n=new URLSearchParams(e.sharedPayload||{}).toString(),r=e.events.map((function(e){return new URLSearchParams(e).toString()})).join("\r\n");return{endpoint:e.endpoint,resource:n,body:r}}(a);t.body?(r="".concat(d.endpoint,"?").concat(d.resource),t.body=d.body):r="".concat(d.endpoint,"?").concat(d.resource,"&").concat(d.body)}}catch(e){console.error("Error in fetch interceptor:",e)}if(!1===o)return e.originalFetch(r,t)}return e.originalFetch=window.fetch.bind(window),e.originalFetch&&e.originalFetch.toString().includes("native code")&&(window.fetch=function(){for(var e=[],n=0;n<arguments.length;n++)e[n]=arguments[n];return r.apply(null,e)}),{settings:n}}return e.originalFetch=window.fetch.bind(window),e}));
+var logRequestsToConsoleTask=function(){"use strict";return function(e){return console.group("%cReturnOfTheCustomTask: New Request ( ".concat(e.events.length," Events )"),"color: purple; font-size: large; font-weight: bold;"),console.log(e),console.groupEnd(),e}}();
+var preventDuplicateTransactionsTask=function(){"use strict";var t={sync:function(t){var e=document.cookie.split("; ").find((function(e){return e.startsWith(t+"=")})),n=localStorage.getItem(t),o=e?e.split("=")[1]:null;if(null!==o){var c=decodeURIComponent(o),a=parseInt(c.split(":")[0],10),r=n?parseInt(n.split(":")[0],10):0;a>r?localStorage.setItem(t,c):r>a&&null!==n&&(document.cookie="".concat(t,"=").concat(encodeURIComponent(n),"; path=/; SameSite=Strict; Secure"))}else null!==n&&(document.cookie="".concat(t,"=").concat(encodeURIComponent(n),"; path=/; SameSite=Strict; Secure"))},get:function(t){this.sync(t);var e=localStorage.getItem(t);return e&&e.split(":")[1]||null},set:function(t,e,n,o,c){void 0===n&&(n=7),void 0===o&&(o="/"),void 0===c&&(c="");var a=Date.now(),r="".concat(a,":").concat(e),i=encodeURIComponent(r);localStorage.setItem(t,r);var s=new Date(Date.now()+864e5*n).toUTCString();document.cookie="".concat(t,"=").concat(i,"; expires=").concat(s,"; path=").concat(o,"; domain=").concat(c,"; SameSite=Strict; Secure")}};return function(e,n){if(void 0===n&&(n="__ad_trans_dedup"),!e)return console.error("preventDuplicateTransactionsTask: Request is required."),e;if(e.events.some((function(t){return"purchase"===t.en}))){var o=[];try{var c=t.get(n);o=c?JSON.parse(c):[]}catch(t){console.error("Failed to parse stored transactions:",t)}e.events=e.events.filter((function(t){return("purchase"!==t.en||!o.includes(t["ep.transaction_id"]))&&(o.push(t["ep.transaction_id"]),!0)})),t.set(n,JSON.stringify(o))}return 0===e.events.length&&(e.__skip=!0),e}}();
+
+const ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+        preventDuplicateTransactionsTask,
+        logRequestsToConsoleTask
+    ]
+});
+
+</script>
+<h1>preventDuplicateTransactionsTask</h1>
+<pre>
+const ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+        preventDuplicateTransactionsTask,
+        logRequestsToConsoleTask
+    ]
+});
+
+gtag("event", "purchase", {
+    transaction_id: "T_12345_1",
+    value: 30.03,
+    tax: 4.90,
+    shipping: 5.99,
+    currency: "USD",
+    coupon: "SUMMER_SALE",
+    items: [
+    // If someone purchases more than one item,
+    // you can add those items to the items array
+     {
+      item_id: "SKU_12345",
+      item_name: "Stan and Friends Tee",
+      affiliation: "Google Merchandise Store",
+      coupon: "SUMMER_FUN",
+      discount: 2.22,
+      index: 0,
+      item_brand: "Google",
+      item_category: "Apparel",
+      item_category2: "Adult",
+      item_category3: "Shirts",
+      item_category4: "Crew",
+      item_category5: "Short sleeve",
+      item_list_id: "related_products",
+      item_list_name: "Related Products",
+      item_variant: "green",
+      location_id: "ChIJIQBpAG2ahYAR_6128GcTUEo",
+      price: 10.01,
+      quantity: 3
+    }]
+});
+</pre>

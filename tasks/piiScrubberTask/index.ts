@@ -1,20 +1,20 @@
-// src/tasks/piiScrubberTask.ts
-
-import { RequestModel } from '../../types/RequestModel';
+// src/tasks/piiScrubber.ts
 
 /**
- * Sends a copy of the payload to a Snowplow endpoint. 
- * 
+ * Scrubs PII from the request payload.
+ *
  * @param request - The request model to be modified.
- * @param queryParamsBlackList - Array of Measurement IDs to send a copy to
- * @param callback - function to be called after scrubbing
- * @param logScrubbing -log scrubbing details
- * @returns The modified payload object.
+ * @param queryParamsBlackList - Array of parameters to be removed (From URL-like values).
+ * @param scrubPatternsList - Array of patterns (regex) to match and scrub, defaults to email.
+ * @param callback - Function to be called after scrubbing with the list of scrubbed fields.
+ * @param logScrubbing - Whether to log scrubbing details.
+ * @returns The modified request model.
  */
 const piiScrubberTask = (
   request: RequestModel,
-  queryParamsBlackList?: string[],
-  callback?: (scrubbedFields: string[]) => void,
+  queryParamsBlackList: string[] = [],
+  scrubPatternsList: ScrubPattern[] = [],
+  callback?: (scrubbedValues: object) => void,
   logScrubbing: boolean = false
 ): RequestModel => {
   if (!request) {
@@ -22,40 +22,29 @@ const piiScrubberTask = (
     return request;
   }
 
-  const blackListedQueryStringParameters = ['email', 'mail', 'name', 'surname'];
-  if (Array.isArray(queryParamsBlackList)) {
-    queryParamsBlackList.forEach(param => {
-      if (!blackListedQueryStringParameters.includes(param)) {
-        blackListedQueryStringParameters.push(param);
-      }
-    });
-  }
-
-  const scrubPatterns = {
-    email: {
-      regex: /[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+/,
-      replacement: '[email_redacted]'
-    },
-    ukpc: {
-      regex: /[A-Za-z][A-Ha-hJ-Yj-y]?[0-9][A-Za-z0-9]? ?[0-9][A-Za-z]{2}|[Gg][Ii][Rr] ?0[Aa]{2}/,
-      replacement: '[uk_postal_code_redacted]'
-    },
-    ssn: {
-      regex: /\b^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}\b/,
-      replacement: '[ssn_redacted]'
-    }
+  const isUrlWithOptionalQuery = (value: string): boolean => {
+    return /^(?:[a-zA-Z][a-zA-Z\d+\-.]*:\/\/[^\s]*)(?:\?[^\s]*)?$/.test(value);
   };
+
+  const blackListedQueryStringParameters = ['email', 'mail', 'name', 'surname'].concat(queryParamsBlackList).filter(Boolean);
+  const defaultScrubPatterns: ScrubPattern[] = [{
+    id: 'email',
+    regex: /[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+/,
+    replacement: '[email_redacted]'
+  }];
+  
+  const scrubPatterns = defaultScrubPatterns.concat(scrubPatternsList).filter(Boolean);
 
   const scrubbedValues: { [key: string]: any } = {};
   const scrubbedFields: string[] = [];
 
   const scrubData = (data: { [key: string]: any }, origin: string) => {
     Object.entries(data).forEach(([key, value]) => {
-      Object.entries(scrubPatterns).forEach(([type, { regex, replacement }]) => {
-        if (regex.test(value)) {
+      scrubPatterns.forEach(({ id, regex, replacement }) => {
+        if (typeof value === 'string' && regex.test(value)) {
           scrubbedValues[key] = {
             origin,
-            rule: `matched: ${type}`,
+            rule: `matched pattern: ${id}`,
             original: value,
             scrubbed: value.replace(regex, replacement)
           };
@@ -64,12 +53,13 @@ const piiScrubberTask = (
         }
       });
 
-      // Handle URLs in query parameters
-      if (typeof value === 'string' && value.includes('http')) {
+
+      if (typeof value === 'string' && isUrlWithOptionalQuery(value)) {
         try {
           const url = new URL(value);
           const params = new URLSearchParams(url.search);
-
+      
+          // Process blacklisted parameters
           blackListedQueryStringParameters.forEach(param => {
             if (params.has(param)) {
               params.set(param, 'parameter_removed');
@@ -82,11 +72,30 @@ const piiScrubberTask = (
               scrubbedFields.push(param);
             }
           });
+      
+          // Process query string values for scrub patterns
+          params.forEach((value, param) => {
+            scrubPatterns.forEach(({ id, regex, replacement }) => {
 
+              if (regex.test(value)) {
+                const scrubbedValue = value.replace(regex,replacement);
+                params.set(param, scrubbedValue);
+                scrubbedValues[key] = {
+                  origin,
+                  rule: `matched pattern: ${id}`,
+                  original: url.toString(),
+                  scrubbed: scrubbedValue
+                };
+                scrubbedFields.push(param);
+              }
+            });
+          });
+      
+          // Update the URL's search parameters and assign it to data
           url.search = params.toString();
           data[key] = url.toString();
         } catch (e) {
-          console.error('Invalid URL:', value);
+          console.error('Invalid URL:', value, e);
         }
       }
     });
@@ -100,7 +109,7 @@ const piiScrubberTask = (
 
   // Call the callback if it's a function
   if (callback && scrubbedFields.length > 0) {
-    callback(scrubbedFields);
+    callback(scrubbedValues);
   }
 
   // Log scrubbing details if required

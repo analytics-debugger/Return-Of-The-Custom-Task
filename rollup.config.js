@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { rollup } from 'rollup';
 import { performance } from 'perf_hooks';
+import alias from '@rollup/plugin-alias';
 
 console.log('Building Started');
 
@@ -68,9 +69,10 @@ const configs = files.map(file => {
 
 // Add main entry configuration
 configs.push({
-  input: path.join('src', 'index.js'),
+  input: path.join('src', 'index.ts'),
   cache: false, // Disable cache to avoid stale results
   plugins: [
+    typescript(),
     babel({
       babelHelpers: 'bundled', // Keep this as 'bundled'
       exclude: 'node_modules/**', // Ensure all JS files are processed
@@ -84,7 +86,7 @@ configs.push({
             },
             loose: true, // Use simpler transformations, reduces helpers
             useBuiltIns: false, // Skip automatic polyfill injection
-            exclude: [
+            /*exclude: [
               'transform-function-name', // Skips naming helpers
               'transform-spread', // Avoid transforming array spread/rest
               'transform-arrow-functions',
@@ -93,15 +95,18 @@ configs.push({
               'transform-typeof-symbol', // Skips symbol-related transformations    
               'transform-for-of', // Skip for...of transformation
               'transform-regenerator',
-            ]  
+            ]
+              */ 
           }
         ]
       ],
       plugins: [
+        /*
         '@babel/plugin-transform-block-scoping', // Converts `const` and `let` to `var`
         '@babel/plugin-transform-template-literals', // Converts template literals to string concatenation
         '@babel/plugin-transform-arrow-functions',
         'transform-remove-console'
+        */
       ],
     })
   ],

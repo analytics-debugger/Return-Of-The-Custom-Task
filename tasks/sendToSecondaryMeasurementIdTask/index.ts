@@ -1,8 +1,5 @@
 // src/tasks/sendToSecondaryMeasurementIdTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
-import { Event } from '../../types/Event';
-
 /**
  * Sends a copy to a secondary Measurement Ids
  * You can control which events to copy
@@ -16,8 +13,8 @@ import { Event } from '../../types/Event';
 const sendToSecondaryMeasurementIdTask = (
   request: RequestModel,
   toMeasurementIds: string[],
-  whiteListedEvents?: string[],
-  blackListedEvents?: string[],
+  whiteListedEvents: string[] = [], 
+  blackListedEvents: string[] = []
 ): RequestModel => {
   if (!request || !toMeasurementIds || !Array.isArray(toMeasurementIds) || toMeasurementIds.length === 0) {
     console.error('sendToSecondaryMeasurementIdTask: Request and extra measurementIds are required.');
@@ -35,7 +32,7 @@ const sendToSecondaryMeasurementIdTask = (
   
     const options = {
       method: 'POST',
-      body: {}
+      body: null
     };
   
     if (events.length > 1) {
@@ -74,22 +71,22 @@ const sendToSecondaryMeasurementIdTask = (
     whiteListedEvents,
     blackListedEvents
   );
+  if(clonedRequest.events.length > 0){
+    toMeasurementIds.forEach(id => {
+      if(!/^(G-|MC-)[A-Z0-9]+$/.test(id)){
+        console.error('Invalid MeasurementId Format, skipping', id);
+      }else{
+        clonedRequest.sharedPayload.tid = id;
   
-  toMeasurementIds.forEach(id => {
-    if(!/^(G-|MC-)[A-Z0-9]+$/.test(id)){
-      console.error('Invalid MeasurementId Format, skipping', id);
-    }else{
-      clonedRequest.sharedPayload.tid = id;
-
-      const req = buildFetchRequest(clonedRequest);      
-      if(window.GA4CustomTask?.originalFetch){
-        window.GA4CustomTask.originalFetch(req.resource, req.options);    
+        const req = buildFetchRequest(clonedRequest);      
+        if(window.GA4CustomTask?.originalFetch){
+          window.GA4CustomTask.originalFetch(req.resource, req.options);    
+        }
+        
+  
       }
-      
-
-    }
-  });
-
+    });
+  }
   return request;
 };
 

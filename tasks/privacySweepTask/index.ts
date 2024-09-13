@@ -1,6 +1,5 @@
 // src/tasks/privacySweepTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
 /**
  * Removes all parameters that are not privacy friendly or that are not reported on Google Analytics 4 in any way.
  * 

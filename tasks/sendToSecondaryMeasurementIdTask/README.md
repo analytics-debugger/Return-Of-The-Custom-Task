@@ -8,7 +8,7 @@ This task will send a duplicate hit to the defined alternative Measurement Ids
 
 ## Task Code
 
-```var sendToSecondaryMeasurementId = (...) => {...}```
+```var sendToSecondaryMeasurementIdTask = (...) => {...}```
 > You can grab the code for this task from dist/tasks/ folder
 
 ## Code Example
@@ -17,14 +17,14 @@ This task will send a duplicate hit to the defined alternative Measurement Ids
 var GA4CustomTaskInstance = new GA4CustomTask({
  allowedMeasurementIds: ["G-DEBUGEMALL"],
  tasks: [
-  (requestModel) => sendToSecondaryMeasurementId(requestModel, '["G-SECONDID"]', [], []), 
+  (requestModel) => sendToSecondaryMeasurementIdTask(requestModel, ["G-SECONDID"], [], []), 
  ]
 });
 ```
 
 ### Parameters
   
-```sendToSecondaryMeasurementId(requestModel, toMeasurementIds)```
+```sendToSecondaryMeasurementIdTask(requestModel, toMeasurementIds)```
 |Parameter|Type|Description|
 |--|--|--|
 |toMeasurementIds|string[]|The array of measurement that will be getting a copy|

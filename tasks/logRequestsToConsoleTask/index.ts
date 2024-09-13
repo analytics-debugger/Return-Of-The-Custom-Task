@@ -1,4 +1,4 @@
-import { RequestModel } from '../../types/RequestModel';
+// src/tasks/logRequestToConsole.ts
 
 /**
  * Prints the current payload state to the console.

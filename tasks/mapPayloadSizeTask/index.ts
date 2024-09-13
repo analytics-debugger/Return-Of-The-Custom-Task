@@ -1,7 +1,5 @@
 // src/tasks/mapPayloadSizeTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
-
 /**
  * Adds a event parameter on the provided event property name with the size of the payload.
  * 

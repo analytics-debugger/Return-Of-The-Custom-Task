@@ -1,6 +1,5 @@
 // src/tasks/preventDuplicateTransactionsTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
 import storageHelper from '../../src/helpers/storageHelper';
 /**
  * Monitors purchase events and keeps track of transaction IDs to prevent duplicate transactions.

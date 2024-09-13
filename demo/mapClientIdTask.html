@@ -1,0 +1,36 @@
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DEBUGEMALL"></script>
+<script>
+
+   window.dataLayer = window.dataLayer || [];
+   
+   function gtag(){dataLayer.push(arguments);}
+   gtag('js', new Date());
+   gtag('config', 'G-DEBUGEMALL', {
+       send_page_view: true
+   });
+
+
+</script>
+<script>
+!function(e,n){"object"==typeof exports&&"undefined"!=typeof module?module.exports=n():"function"==typeof define&&define.amd?define(n):(e="undefined"!=typeof globalThis?globalThis:e||self).GA4CustomTask=n()}(this,(function(){"use strict";function e(n){if(!n||!n.tasks)throw new Error("Invalid settings: tasks are required");function r(r,t){try{if("string"==typeof r&&function(e){try{var n=new URL(e),r=new URLSearchParams(n.search),t=r.get("tid"),o=r.get("cid"),i=r.get("v");return!!t&&t.startsWith("G-")&&!!o&&"2"===i}catch(e){return console.error("Error parsing URL:",e),!1}}(r)){var o=new URL(r),i={endpoint:o.origin+o.pathname,sharedPayload:null,events:[]},a=Array.from(new URLSearchParams(o.search).entries());t.body?(i.sharedPayload=Object.fromEntries(a),i.events=t.body.split("\r\n").map((function(e){return Object.fromEntries(new URLSearchParams(e).entries())}))):(i.sharedPayload=Object.fromEntries(a.slice(0,a.findIndex((function(e){return"en"===e[0]})))),i.events=[Object.fromEntries(a.slice(a.findIndex((function(e){return"en"===e[0]}))))]);var c=Object.fromEntries(new URLSearchParams(o.search));if(n.allowedMeasurementIds&&Array.isArray(n.allowedMeasurementIds)&&!n.allowedMeasurementIds.includes(c.tid))return e.originalFetch(r,t);Array.isArray(n.tasks)&&n.tasks.forEach((function(n){"function"==typeof n?i=n.call({originalFetch:e.originalFetch},i):console.warn("Callback is not a function:",n)}));var s=function(e){var n=new URLSearchParams(e.sharedPayload||{}).toString(),r=e.events.map((function(e){return new URLSearchParams(e).toString()})).join("\r\n");return{endpoint:e.endpoint,resource:n,body:r}}(i);t.body?(r="".concat(s.endpoint,"?").concat(s.resource),t.body=s.body):r="".concat(s.endpoint,"?").concat(s.resource,"&").concat(s.body)}}catch(e){console.error("Error in fetch interceptor:",e)}return e.originalFetch(r,t)}return e.originalFetch=window.fetch.bind(window),e.originalFetch&&e.originalFetch.toString().includes("native code")&&(window.fetch=function(){for(var e=[],n=0;n<arguments.length;n++)e[n]=arguments[n];return r.apply(null,e)}),{settings:n}}return e.originalFetch=window.fetch.bind(window),e}));
+var logRequestsToConsoleTask=function(){"use strict";return function(e){return console.group("%cReturnOfTheCustomTask: New Request ( ".concat(e.events.length," Events )"),"color: purple; font-size: large; font-weight: bold;"),console.log(e),console.groupEnd(),e}}();
+var mapClientIdTask=function(){"use strict";return function(r,e,a){if(void 0===a&&(a="event"),!r)throw new Error("Request is required.");if(!e)throw new Error("Name is required.");var n="".concat("user"===a?"up.":"ep.").concat(e);return"user"===a?r.sharedPayload[n]=r.sharedPayload.cid:r.events.map((function(e){e[n]=r.sharedPayload.cid})),r}}();
+
+const ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+         (requestModel) => mapClientIdTask(requestModel, 'client_id', 'event'),
+         logRequestsToConsoleTask
+    ]
+});
+</script>
+<h1>mapClientIdTask</h1>
+<pre>
+const ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+        (requestModel) => mapClientIdTask(requestModel, 'hi_summitters', 'event'),
+        logRequestsToConsoleTask
+    ]
+});
+</pre>

@@ -1,21 +1,10 @@
 {
     "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "targets": {
-            "android": "85",
-            "chrome": "85",
-            "firefox": "81",
-            "ie": "11",
-            "ios": "13",
-            "safari": "13"
-          },
-          "useBuiltIns": "usage",
-          "corejs": 3
-        }
-      ]
+      "@babel/preset-env",
+      "@babel/preset-typescript"
     ],
-    "plugins": ["@babel/plugin-transform-block-scoped-functions"]
+    "plugins": [
+      "@babel/plugin-transform-runtime"
+    ]
   }
   

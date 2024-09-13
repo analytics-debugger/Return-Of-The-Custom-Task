@@ -1,0 +1,37 @@
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DEBUGEMALL"></script>
+<script>
+
+   window.dataLayer = window.dataLayer || [];
+   
+   function gtag(){dataLayer.push(arguments);}
+   gtag('js', new Date());
+   gtag('config', 'G-DEBUGEMALL', {
+       send_page_view: true
+   });
+
+
+</script>
+<script>
+!function(e,n){"object"==typeof exports&&"undefined"!=typeof module?module.exports=n():"function"==typeof define&&define.amd?define(n):(e="undefined"!=typeof globalThis?globalThis:e||self).GA4CustomTask=n()}(this,(function(){"use strict";function e(n){if(!n||!n.tasks)throw new Error("Invalid settings: tasks are required");function r(r,t){try{if("string"==typeof r&&function(e){try{var n=new URL(e),r=new URLSearchParams(n.search),t=r.get("tid"),o=r.get("cid"),i=r.get("v");return!!t&&t.startsWith("G-")&&!!o&&"2"===i}catch(e){return console.error("Error parsing URL:",e),!1}}(r)){var o=new URL(r),i={endpoint:o.origin+o.pathname,sharedPayload:null,events:[]},a=Array.from(new URLSearchParams(o.search).entries());t.body?(i.sharedPayload=Object.fromEntries(a),i.events=t.body.split("\r\n").map((function(e){return Object.fromEntries(new URLSearchParams(e).entries())}))):(i.sharedPayload=Object.fromEntries(a.slice(0,a.findIndex((function(e){return"en"===e[0]})))),i.events=[Object.fromEntries(a.slice(a.findIndex((function(e){return"en"===e[0]}))))]);var c=Object.fromEntries(new URLSearchParams(o.search));if(n.allowedMeasurementIds&&Array.isArray(n.allowedMeasurementIds)&&!n.allowedMeasurementIds.includes(c.tid))return e.originalFetch(r,t);Array.isArray(n.tasks)&&n.tasks.forEach((function(n){"function"==typeof n?i=n.call({originalFetch:e.originalFetch},i):console.warn("Callback is not a function:",n)}));var s=function(e){var n=new URLSearchParams(e.sharedPayload||{}).toString(),r=e.events.map((function(e){return new URLSearchParams(e).toString()})).join("\r\n");return{endpoint:e.endpoint,resource:n,body:r}}(i);t.body?(r="".concat(s.endpoint,"?").concat(s.resource),t.body=s.body):r="".concat(s.endpoint,"?").concat(s.resource,"&").concat(s.body)}}catch(e){console.error("Error in fetch interceptor:",e)}return e.originalFetch(r,t)}return e.originalFetch=window.fetch.bind(window),e.originalFetch&&e.originalFetch.toString().includes("native code")&&(window.fetch=function(){for(var e=[],n=0;n<arguments.length;n++)e[n]=arguments[n];return r.apply(null,e)}),{settings:n}}return e.originalFetch=window.fetch.bind(window),e}));
+var logRequestsToConsoleTask=function(){"use strict";return function(e){return console.group("%cReturnOfTheCustomTask: New Request ( ".concat(e.events.length," Events )"),"color: purple; font-size: large; font-weight: bold;"),console.log(e),console.groupEnd(),e}}();
+var piiScrubberTask=function(){"use strict";return function(e,r,a,t,n){if(void 0===r&&(r=[]),void 0===a&&(a=[]),void 0===n&&(n=!1),!e)return console.error("piiScrubberTask: Request is required."),e;var o=["email","mail","name","surname"].concat(r).filter(Boolean),c=[{id:"email",regex:/[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+/,replacement:"[email_redacted]"}].concat(a).filter(Boolean),i={},s=[],l=function(e,r){Object.entries(e).forEach((function(a){var t=a[0],n=a[1];if(c.forEach((function(a){var o=a.id,c=a.regex,l=a.replacement;"string"==typeof n&&c.test(n)&&(i[t]={origin:r,rule:"matched pattern: ".concat(o),original:n,scrubbed:n.replace(c,l)},e[t]=n.replace(c,l),s.push(t))})),"string"==typeof n&&function(e){return/^(?:[a-zA-Z][a-zA-Z\d+\-.]*:\/\/[^\s]*)(?:\?[^\s]*)?$/.test(e)}(n))try{var l=new URL(n),u=new URLSearchParams(l.search);o.forEach((function(e){u.has(e)&&(u.set(e,"parameter_removed"),i[t]={origin:r,rule:"blacklisted parameter",original:n,scrubbed:l.toString()},s.push(e))})),u.forEach((function(e,a){c.forEach((function(n){var o=n.id,c=n.regex,d=n.replacement;if(c.test(e)){var f=e.replace(c,d);u.set(a,f),i[t]={origin:r,rule:"matched pattern: ".concat(o),original:l.toString(),scrubbed:f},s.push(a)}}))})),l.search=u.toString(),e[t]=l.toString()}catch(e){console.error("Invalid URL:",n,e)}}))};return l(e.sharedPayload,"sharedPayload"),e.events.forEach((function(e){return l(e,"events")})),t&&s.length>0&&t(i),n&&Object.keys(i).length>0&&(console.groupCollapsed("PII Scrubber: Scrubbed Data"),console.log(i),console.groupEnd()),e}}();
+
+const ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+    (requestModel) => piiScrubberTask(requestModel, [], [], (data)=>{console.log("THIS WAS THE SCRUBBED DATA SENT TO MONGODB", data)},true),
+         logRequestsToConsoleTask
+    ]
+});
+
+</script>
+<h1>piiScrubberTask</h1>
+<pre>
+const ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+        (requestModel) => piiScrubberTask(requestModel, [], [], (data)=>{ console.log("THIS WAS THE SCRUBBED DATA SENT TO MONGODB", data)}),true),
+        logRequestsToConsoleTask
+    ]
+});
+</pre>

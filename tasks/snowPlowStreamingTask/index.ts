@@ -1,7 +1,5 @@
 // src/tasks/snowPlowStreamingTask.ts
 
-import { RequestModel } from '../../types/RequestModel';
-
 /**
  * Sends a copy of the payload to a Snowplow endpoint. 
  * 

@@ -1,4 +1,4 @@
-function GA4CustomTask(settings) {
+function GA4CustomTask(settings: GA4CustomTaskSettings) {
   if (!settings || !settings.tasks) {
     throw new Error('Invalid settings: tasks are required');
   }
@@ -9,33 +9,34 @@ function GA4CustomTask(settings) {
   function initialize() {
     if (GA4CustomTask.originalFetch && GA4CustomTask.originalFetch.toString().includes('native code')) {
       // Bind interceptFetch to the correct context
-      window.fetch = function(...args) {
+      window.fetch = function (...args: [RequestInfo, FetchOptions]) {
         return interceptFetch.apply(null, args);
       };
     }
   }
 
-  function interceptFetch(resource, options) {
-    const isGA4Hit = (url) => {
-      try {
-        const urlObj = new URL(url);
-        const params = new URLSearchParams(urlObj.search);
-
-        const tid = params.get('tid');
-        const cid = params.get('cid');
-        const v = params.get('v');
-
-        return tid && tid.startsWith('G-') && cid && v === '2';
-      } catch (e) {
-        console.error('Error parsing URL:', e);
-        return false;
-      }
-    };
-
+  function isGA4Hit(url: string): boolean {
     try {
-      if (resource && isGA4Hit(resource)) {
+      const urlObj = new URL(url);
+      const params = new URLSearchParams(urlObj.search);
+
+      const tid = params.get('tid');
+      const cid = params.get('cid');
+      const v = params.get('v');
+
+      return !!tid && tid.startsWith('G-') && !!cid && v === '2';
+    } catch (e) {
+      console.error('Error parsing URL:', e);
+      return false;
+    }
+  }
+
+  function interceptFetch(resource: RequestInfo, options: FetchOptions) {
+    let skipRequest = false;
+    try {  
+      if (typeof resource === 'string' && isGA4Hit(resource)) {
         const url = new URL(resource);
-        let ga4RequestModel = {
+        let ga4RequestModel: RequestModel = {
           endpoint: url.origin + url.pathname,
           sharedPayload: null,
           events: []
@@ -54,16 +55,18 @@ function GA4CustomTask(settings) {
           ];
         } else {
           ga4RequestModel.sharedPayload = Object.fromEntries(payloadArray);
-          ga4RequestModel.events = options.body.split('\r\n').map(e =>
-            Object.fromEntries(new URLSearchParams(e).entries())
-          );
+          ga4RequestModel.events = options.body
+            .split('\r\n')
+            .map(e => Object.fromEntries(new URLSearchParams(e).entries()));
         }
 
         const payload = Object.fromEntries(new URLSearchParams(url.search));
 
-        if (settings.allowedMeasurementIds &&
-            Array.isArray(settings.allowedMeasurementIds) &&
-            !settings.allowedMeasurementIds.includes(payload.tid)) {
+        if (
+          settings.allowedMeasurementIds &&
+          Array.isArray(settings.allowedMeasurementIds) &&
+          !settings.allowedMeasurementIds.includes(payload['tid'])
+        ) {
           return GA4CustomTask.originalFetch(resource, options);
         }
 
@@ -71,18 +74,23 @@ function GA4CustomTask(settings) {
           settings.tasks.forEach(callback => {
             if (typeof callback === 'function') {
               // Bind `originalFetch` to the callback
-              ga4RequestModel = callback.call({ originalFetch: GA4CustomTask.originalFetch }, ga4RequestModel);
+              ga4RequestModel = callback.call(
+                { originalFetch: GA4CustomTask.originalFetch },
+                ga4RequestModel
+              );
             } else {
               console.warn('Callback is not a function:', callback);
             }
           });
         }
-
-        const reBuildResource = (model) => {
-          const resource = new URLSearchParams(model.sharedPayload).toString();
-          const body = model.events.map(e =>
-            new URLSearchParams(e).toString()
-          ).join('\r\n');
+        if(ga4RequestModel.events && ga4RequestModel.events.length === 0) {
+          skipRequest = true;
+        }
+        const reBuildResource = (model: RequestModel) => {
+          const resource = new URLSearchParams(model.sharedPayload || {}).toString();
+          const body = model.events
+            .map(e => new URLSearchParams(e).toString())
+            .join('\r\n');
           return {
             endpoint: model.endpoint,
             resource,
@@ -102,8 +110,9 @@ function GA4CustomTask(settings) {
     } catch (e) {
       console.error('Error in fetch interceptor:', e);
     }
-
-    return GA4CustomTask.originalFetch(resource, options);
+    if(skipRequest === false){
+      return GA4CustomTask.originalFetch(resource, options);
+    }    
   }
 
   initialize();
@@ -111,5 +120,8 @@ function GA4CustomTask(settings) {
     settings
   };
 }
+
+// Store originalFetch as a property of the function itself
+GA4CustomTask.originalFetch = window.fetch.bind(window);
 
 export default GA4CustomTask;
