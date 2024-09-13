@@ -1,78 +1,40 @@
-name: Build Library
+name: Release
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '16'  # or whatever version you're using
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build
+      - name: Build project
         run: npm run build
 
-      - name: Get Package Version
-        id: get_version
-        run: echo "VERSION=$(node -p -e "require('./package.json').version")" >> $GITHUB_ENV
-
-      - name: Create Tag
-        id: create_tag
+      - name: Create a version tag
+        id: tag
         run: |
-          git tag $VERSION
-          git push origin $VERSION
-        env:
-          VERSION: ${{ env.VERSION }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          version=$(node -p "require('./package.json').version")
+          echo "VERSION=$version" >> $GITHUB_ENV
+          git tag $version
+          git push origin $version
 
-      - name: Debug Info
-        run: |
-          echo "Git ref: ${{ github.ref }}"
-          echo "Version: $VERSION"
-
-      - name: Create Release
-        id: create_release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/create-release@v1
+      - name: Create GitHub release
+        id: release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Automated release for ${{ github.ref }}
+          files: 'dist/**'  # Include all files in the dist folder
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Debug Create Release Response
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          echo "Release ID: ${{ steps.create_release.outputs.id }}"
-          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
-
-      - name: Upload Release Assets
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          for file in dist/*; do
-            echo "Uploading $file"
-            curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary @"$file" \
-              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
-          done
