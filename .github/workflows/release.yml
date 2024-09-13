@@ -26,9 +26,13 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Create a version tag
+      - name: Create and push version tag
         run: |
           version=$(node -p "require('./package.json').version")
+          # Delete existing tag if it exists
+          git tag -d $version || true
+          git push origin :refs/tags/$version || true
+          # Create and push new tag
           git tag $version
           git push origin $version
 
