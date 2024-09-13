@@ -29,9 +29,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Archive Dist Folder
-        run: tar -czf dist.tar.gz -C dist .
-
       - name: Get Package Version
         id: get_version
         run: echo "VERSION=$(node -p -e "require('./package.json').version")" >> $GITHUB_ENV
@@ -57,13 +54,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Release Asset
+      - name: Upload Release Assets
         if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist.tar.gz
-          asset_name: dist.tar.gz
-          asset_content_type: application/gzip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for file in dist/*; do
+            echo "Uploading $file"
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$file" \
+              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
+          done
