@@ -1,12 +1,12 @@
-name: Release
+name: Build and Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'  # This triggers the workflow on tag pushes like v1.0.0
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -15,26 +15,33 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'  # Update to Node.js 20
+          node-version: '20'  # Specify Node.js version 20
+
+      - name: Install pnpm
+        run: npm install -g pnpm
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build project
-        run: npm run build
+        run: pnpm build  # Make sure you have a build script in your package.json
 
-      - name: Create a version tag
-        id: tag
-        run: |
-          version=$(node -p "require('./package.json').version")
-          echo "VERSION=$version" >> $GITHUB_ENV
-          git tag $version
-          git push origin $version
-
-      - name: Create GitHub release
-        id: release
-        uses: softprops/action-gh-release@v1
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          files: 'dist/**'  # Include all files in the dist folder
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: 'Automated release created by GitHub Actions'
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/  # Path to your built assets
+          asset_name: dist.zip  # Name for the uploaded asset
+          asset_content_type: application/zip
