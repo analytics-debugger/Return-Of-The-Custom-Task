@@ -132,7 +132,14 @@ const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
             } catch (e) {
                 console.error('Error in fetch interceptor:', e);
             }
+            console.log("ASDASD", [resource, options])
             return [resource, options] as FetchArgs;
+        },
+        response: function (response: Response) {
+            // Here, you can handle the response, inspect the status code, or modify the response if needed
+            console.log("RESPONSE", response);
+            // Return the response for further processing
+            return response;
         },
         responseError: function (error: any) {
             return Promise.reject(error);
