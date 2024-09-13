@@ -41,7 +41,6 @@ jobs:
           fi
 
       - name: Create GitHub release
-        if: ${{ steps.tag.outputs.VERSION }}
         uses: softprops/action-gh-release@v1
         with:
           files: 'dist/**'
