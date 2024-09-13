@@ -39,7 +39,6 @@ jobs:
       - name: Create Tag
         id: create_tag
         run: |
-          echo "Creating tag: $VERSION"
           git tag $VERSION
           git push origin $VERSION
         env:
