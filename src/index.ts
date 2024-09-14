@@ -49,26 +49,14 @@ function interceptor(fetch: typeof window.fetch, args: FetchArgs): Promise<Respo
     return responsePromise;
 }
 
-interface GA4CustomTaskSettings {
-    allowedMeasurementIds?: string[];
-    tasks?: ((ga4RequestModel: any) => any)[];
-}
-
-interface GA4RequestModel {
-    endpoint: string;
-    sharedPayload: { [key: string]: any } | null;
-    events: { [key: string]: any }[];
-}
-
 const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
     if (!settings) return;
-
     interceptors.push({
         request: function (resource: RequestInfo, options: RequestInit = {}) {
             try {
                 if (typeof resource === 'string' && isGA4Hit(resource)) {
                     const url = new URL(resource);
-                    let ga4RequestModel: GA4RequestModel = {
+                    let RequestModel: RequestModel = {
                         endpoint: url.origin + url.pathname,
                         sharedPayload: null,
                         events: [],
@@ -77,15 +65,15 @@ const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
                     const payloadArray = Array.from(new URLSearchParams(url.search).entries());
 
                     if (!options.body) {
-                        ga4RequestModel.sharedPayload = Object.fromEntries(
+                        RequestModel.sharedPayload = Object.fromEntries(
                             payloadArray.slice(0, payloadArray.findIndex(([key]) => key === 'en'))
                         );
-                        ga4RequestModel.events = [
+                        RequestModel.events = [
                             Object.fromEntries(payloadArray.slice(payloadArray.findIndex(([key]) => key === 'en')))
                         ];
                     } else {
-                        ga4RequestModel.sharedPayload = Object.fromEntries(payloadArray);
-                        ga4RequestModel.events = (options.body as string)
+                        RequestModel.sharedPayload = Object.fromEntries(payloadArray);
+                        RequestModel.events = (options.body as string)
                             .split('\r\n')
                             .map(e => Object.fromEntries(new URLSearchParams(e).entries()));
                     }
@@ -103,14 +91,14 @@ const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
                     if (Array.isArray(settings.tasks)) {
                         settings.tasks.forEach(callback => {
                             if (typeof callback === 'function') {
-                                ga4RequestModel = callback.call({ originalFetch: GA4CustomTask.originalFetch }, ga4RequestModel);
+                                RequestModel = callback.call({ originalFetch: GA4CustomTask.originalFetch }, RequestModel);
                             } else {
                                 console.warn('Callback is not a function:', callback);
                             }
                         });
                     }
 
-                    const reBuildResource = (model: GA4RequestModel) => {
+                    const reBuildResource = (model: RequestModel) => {
                         const resourceString = new URLSearchParams(model.sharedPayload || {}).toString();
                         const bodyString = model.events.map(e => new URLSearchParams(e).toString()).join('\r\n');
                         return {
@@ -120,7 +108,7 @@ const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
                         };
                     };
 
-                    const newResource = reBuildResource(ga4RequestModel);
+                    const newResource = reBuildResource(RequestModel);
 
                     if (options.body) {
                         resource = `${newResource.endpoint}?${newResource.resource}`;
@@ -132,13 +120,9 @@ const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
             } catch (e) {
                 console.error('Error in fetch interceptor:', e);
             }
-            console.log("ASDASD", [resource, options])
             return [resource, options] as FetchArgs;
         },
         response: function (response: Response) {
-            // Here, you can handle the response, inspect the status code, or modify the response if needed
-            console.log("RESPONSE", response);
-            // Return the response for further processing
             return response;
         },
         responseError: function (error: any) {

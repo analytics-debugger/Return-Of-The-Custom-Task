@@ -19,8 +19,8 @@ interface Interceptor {
 }
 
 interface GA4CustomTaskSettings {
-  tasks?: ((request: RequestModel) => RequestModel)[];
   allowedMeasurementIds?: string[];
+  tasks?: ((RequestModel: any) => any)[];
 }
 
 interface RequestModel {
