@@ -1,14 +1,12 @@
-name: Release
+name: Create Tag
 
 on:
   push:
     branches:
       - main
-    tags:  # This will trigger the workflow when tags are pushed
-      - 'v*.*.*'  # Adjust according to your versioning scheme
 
 jobs:
-  release:
+  create_tag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,36 +17,24 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Build project
-        run: pnpm run build
+        run: npm run build
 
       - name: Create and push version tag
         id: tag
-        if: github.ref == 'refs/heads/main'
         run: |
           version=$(node -p "require('./package.json').version")
           echo "VERSION=$version" >> $GITHUB_ENV
           # Check if the tag already exists
-          if git ls-remote --tags origin | grep -q "refs/tags/$version"; then
-            echo "Tag $version already exists. Skipping tag creation."
+          if git ls-remote --tags origin | grep -q "refs/tags/v$version"; then
+            echo "Tag v$version already exists. Skipping tag creation."
           else
             # Create and push new tag
             git config user.name "GitHub Action"
             git config user.email "action@github.com"
-            git tag $version
-            git push origin $version
+            git tag v$version
+            git push origin v$version
           fi
-
-      - name: Create GitHub release
-        if: startsWith(github.ref, 'refs/tags/')  # Only create release on tag pushes
-        uses: softprops/action-gh-release@v1
-        with:
-          files: 'dist/**'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
