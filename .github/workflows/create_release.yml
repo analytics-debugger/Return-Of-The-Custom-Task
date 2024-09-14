@@ -1,11 +1,7 @@
 name: Create Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-        default: 'main'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions
 
 jobs:
   release:
@@ -13,11 +9,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ref: main # Ensure we checkout the latest code from the 'main' branch
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '20' # Ensure Node.js 20 is used
 
       - name: Install dependencies
         run: npm install
@@ -25,9 +23,17 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Get the latest tag
+        id: get_tag
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest tag: $latest_tag"
+          echo "tag=$latest_tag" >> $GITHUB_ENV
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: 'dist/**'
+          tag_name: ${{ env.tag }} # Use the latest tag found
+          files: 'dist/**' # Files to include in the release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
