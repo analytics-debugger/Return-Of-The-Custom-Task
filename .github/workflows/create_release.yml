@@ -1,9 +1,11 @@
 name: Create Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'  # Adjust this to your version tag format
+  workflow_dispatch:
+    inputs:
+      ref:
+        required: true
+        default: 'main'
 
 jobs:
   release:
