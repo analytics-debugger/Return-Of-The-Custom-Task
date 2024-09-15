@@ -4,7 +4,7 @@ interface Window {
     GA4CustomTask: any; // Replace 'any' with a more specific type if needed
   }
 
-interface Event {
+interface GA4Event {
   en: string; // The string value 'en' can be up to 40 characters long
   [key: string]: any; // Additional dynamic properties with any key and value
 }
@@ -34,4 +34,13 @@ interface ScrubPattern {
   id: string;
   regex: RegExp;
   replacement: string;
+}
+
+interface AllowedEventsSchema {
+  sharedEventParameters?: string[];
+  events: {
+    [key: string]: {
+      wlep: string[];
+    };
+  };
 }
