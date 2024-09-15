@@ -1,109 +1,129 @@
-![ReturnoftheCustomTask](https://github.com/user-attachments/assets/92f0b278-1d0e-4d62-a289-2ac203eefc25)
-
-
-# Return-Of-The-Custom-Task
-
+<p align="center">
+<a href="https://github.com/vueuse/vueuse#gh-dark-mode-only">
+<img  src="https://github.com/user-attachments/assets/92f0b278-1d0e-4d62-a289-2ac203eefc25"  alt="Return Of The Custom Task"  width="800">
+</a>
+<br>
 Leveraging Fetch Inteceptors to replicate the old friend Custom Task :)
+</p>
 
-# Why
+<p align="center">
+<a href="#" target="__blank"><img alt="Version" src="https://img.shields.io/badge/v0.0.1-8A2BE2"></a>
+<a  href="https://opensource.org/licenses/Apache-2.0"  target="__blank"><img  src="https://img.shields.io/badge/License-Apache_2.0-blue.svg"  alt="NPM version"></a>
+<a  href="https://github.com/analytics-debugger/Return-Of-The-Custom-Task/tree/main/tasks"><img  alt="Tasks Count"  src="https://img.shields.io/badge/Available_Tasks-7-blue"></a>
+<a href="https://github.com/analytics-debugger/Return-Of-The-Custom-Task" target="__blank"><img alt="GitHub stars" src="https://img.shields.io/github/sponsors/thyngster"></a>
+<br>
+<a href="https://github.com/analytics-debugger/Return-Of-The-Custom-Task" target="__blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/analytics-debugger/Return-Of-The-Custom-Task?style=social"></a>
+</p>
+  <p align="center">
+		<h1>Sponsor/Donate</h1>
+        Become a Sponsor to support my work: <a href="https://github.com/sponsors/thyngster">GITHUB Sponsor</a>
+  </p>    
 
-One of the best additions to Universal Analytics in the past was the Tasks, more specifically the customTask that allowed us to modify the hits payloads before they
-were sent to the endpoint.
-
+# Why this library 
+One of the best additions to Universal Analytics in the past was the Tasks, more specifically the customTask that allowed us to modify the hits payloads before theywere sent to the endpoint.
+  
 In April 2024, Google Switched the use of sendBeacon to the fetch API. ( not a breaking change since sendBeacon seems to work on top of Fetch ), and along with the chance
-of reading the response from the requests, it allows to intercept the requests and modify the data before it gets send. Which is you read it right it's the same as the
-customTask used to work like.
+
+of reading the response from the requests, it allows to intercept the requests and modify the data before it gets send. Which is you read it right it's the same as the customTask used to work like.
 
 That's why I build a Fetch Interceptor that will allow you to apply custom functions to your payloads, for example for automatically adding the clientId as a event parameter
-or user property, sending a duplicate hit to a secondary account or preventing the duplicate transactions.
 
+or user property, sending a duplicate hit to a secondary account or preventing the duplicate transactions.
 The current features are:
 
 - Grab the current Payload and perform any action over it before it gets sent
 - Allows callbacks concatenations
 - Measurement ID based setup ( apply the callbacks only to the defined hits )
 
+  
+
 Not only this, I tool some time to port and improve all the customTask I was able to find around on internet so you can just use them on your setup.
+
+  
 
 # How to Use It
 
+  
+
 One we have loaded the GA4CustomTask.js code we need to instanciate our Tasker:
+
+  
 
 ```
 var ga4CustomTaskInterceptor = new GA4CustomTask({
-    allowedMeasurementIds: ["G-DEBUGEMALL"],
-    tasks: [
-        logRequestsToConsoleTask,
-        task2,
-        task3
-    ]
+	allowedMeasurementIds: ["G-DEBUGEMALL"],
+	tasks: [
+		logRequestsToConsoleTask,
+		task2,
+		task3
+	]	
 });
-```
+``` 
+Since this is shared between all instances in your pages, you need to specify at least one allowedMeasurementIds, this way only these requests will be intercepted.
 
-Since this is shared between all instances in your pages, you need to specify at least one allowedMeasurementIds, this way only these requests will be
-intercepted.
-
-Also, if there's no tasks nothing will be intercepted.
+Also, if there's no tasks nothing will be intercepted. 
 
 # Building your own Task
+
 You can create your own custom tasks. By default, the library provides a `RequestModel` interface, which includes `sharedPayload` and `events` in object format. The library handles:
 
+  
 - Parsing the request type (GET/POST)
 - Managing multiple events
-- Constructing the final fetch request for your convenience
-
+- Constructing the final fetch request for your convenience 
 
 ```
 interface RequestModel {
-  endpoint: string;
-  sharedPayload: { [key: string]: any }; // No need for null in the type
-  events: { [key: string]: any }[];
-  __skip?: boolean;
+	endpoint: string;
+	sharedPayload: { [key: string]: any }; // No need for null in the type
+	events: { [key: string]: any }[];
+	__skip?: boolean;
 }
-
 ```
+  
 
 ```
 const myCustomTask = (request: RequestModel): RequestModel => {
-  // Your Code
-  return request;
+	// Your Code
+	return request;
 };
 ```
 
-The task expects you to return the RequestModel back. 
+The task expects you to return the RequestModel back.
 This is a very simple example that just logs the requests
 
 ```
 var mySimpleCustomTask = (request) => {
-    console.log("NEW GA4 REQUEST", request);
-    return request;
+	console.log("NEW GA4 REQUEST", request);
+	return request;
 }
 ```
 
+  
+
 If you need to pass parameters
+
+  
 
 ```
 const myCustomTaskWithParams = (request: RequestModel, name: string): RequestModel => {
-  // your logic
-  return request;
+	// your logic
+	return request;
 };
 ```
-
+ 
 ```
 var GA4CustomTaskInstance = new GA4CustomTask({
- allowedMeasurementIds: ["G-DEBUGEMALL"],
- tasks: [
-  (requestModel) => myCustomTaskWithParams(requestModel, 'myNameParamValue'), 
- ]
+	allowedMeasurementIds: ["G-DEBUGEMALL"],
+	tasks: [
+		(requestModel) => myCustomTaskWithParams(requestModel, 'myNameParamValue'),
+	]
 });
 ```
-
-
 Original Fetch object is available at ```GA4CustomTask.originalFetch``` for your convenience.
-You can take a look to tasks folder to see more examples.
+You can take a look to tasks folder to see more examples. 
 
 # Available Tasks List
-
 ||Task Name|Description|
 |-|------------|--|
 |#1|[logRequestsToConsoleTask](tasks/logRequestsToConsoleTask)|Logs all requests to the console, for debugging pourposes
@@ -116,63 +136,66 @@ You can take a look to tasks folder to see more examples.
 |#8|[privacySweepTask](tasks/privacySweepTask)|Cleans Up all non "Analytics" related parameters/ids
 
 ## Adding / Loading Tasks
-We provide several ready to use tasks, you'll find them within the dist/tasks folder, they are offered in normal and minified version. 
+
+We provide several ready to use tasks, you'll find them within the dist/tasks folder, they are offered in normal and minified version.
 
 ### Adding a Task that doens't need parameters
-```
-
+``` 
 var logRequestsToConsoleTask = () => {...} // Copy from dist folder
 const ga4CustomTaskInterceptor = new GA4CustomTask({
-    allowedMeasurementIds: ["G-DEBUGEMALL"],
-    tasks: [
-        logRequestsToConsoleTask,
-    ]
+	allowedMeasurementIds: ["G-DEBUGEMALL"],
+	tasks: [
+		logRequestsToConsoleTask,
+	]
 });
 ```
-
+ 
 ### Adding a Task that used
 Some tasks may require parameters, In that case we'll need to pass the paremter this way
-
 ```
 const mapClientIdTask = () => {...} // Copy from dist folder
 const ga4CustomTaskInterceptor = new GA4CustomTask({
-    allowedMeasurementIds: ["G-DEBUGEMALL"],
-    tasks: [
-        (request) => mapClientIdTask(request, 'client_id')
-    ]
+	allowedMeasurementIds: ["G-DEBUGEMALL"],
+	tasks: [
+		(request) => mapClientIdTask(request, 'client_id')
+	]
 });
 ```
-In GTM we woh't be able to use arrow functions or const 
+
+In GTM we woh't be able to use arrow functions or const
 ```
 var mapClientIdTask = function(payload, clientId) {
-    // Function body copied from dist folder
+	// Function body copied from dist folder
 };
 var ga4CustomTaskInterceptor = new GA4CustomTask({
-    allowedMeasurementIds: ["G-DEBUGEMALL"],
-    tasks: [
-        function(request) {
-            return mapClientIdTask(request, 'client_id');
-        }
-    ]
+	allowedMeasurementIds: ["G-DEBUGEMALL"],
+	tasks: [
+		function(request) {
+			return mapClientIdTask(request, 'client_id');
+		}
+	]
 });
-
 ```
 
+  
+
 ## Stacking / Chaining Tasks
-You may add as many tasks as you want, but remember they will be execute secuencially, so apply them wisely.
+
+You may add as many tasks as you want, but remember they will be execute secuencially, so apply them wisely. 
 
 # The Request Model
+
 Working with Google Analytics 4 (GA4) is more complex than with Universal Analytics, mainly because a GA4 request can contain multiple events. This makes it impossible to work with just a single payload. To simplify things, this library automatically splits and parses the request for you. It takes the current GA4 request and builds a `requestModel`, which includes the shared payload and the event details.
 
 You don’t need to worry about parsing the request. If the request doesn’t have a body, the library will handle splitting the main payload and return a single event.
-
+  
 ```json
 requestModel: {
-    sharedPayload: {},
-    events: [{}, {}]
+	sharedPayload:  {},
+	events:  [{},  {}]
 }
-```
+```  
 
 # Support
-Donations Accepted
 
+Donations Accepted
