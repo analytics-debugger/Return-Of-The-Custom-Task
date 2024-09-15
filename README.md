@@ -1,9 +1,7 @@
 <p align="center">
-<a href="https://github.com/vueuse/vueuse#gh-dark-mode-only">
-<img  src="https://github.com/user-attachments/assets/92f0b278-1d0e-4d62-a289-2ac203eefc25"  alt="Return Of The Custom Task"  width="800">
-</a>
-<br>
-Leveraging Fetch Inteceptors to replicate the old friend Custom Task :)
+    <img  src="https://github.com/user-attachments/assets/92f0b278-1d0e-4d62-a289-2ac203eefc25"  alt="Return Of The Custom Task"  width="800">
+    <br>
+    Leveraging Fetch Inteceptors to replicate the old friend Custom Task :)
 </p>
 
 <p align="center">
