@@ -36,7 +36,12 @@ const piiScrubberTask = (
   const scrubbedValues: { [key: string]: any } = {};
   const scrubbedFields: string[] = [];
 
-  const scrubData = (data: { [key: string]: any }, origin: string) => {
+  const scrubData = (data: { [key: string]: any } | null, origin: string) => {
+    if (data === null) {
+      console.warn(`Skipping scrubbing for ${origin} as data is null`);
+      return;
+    }
+  
     Object.entries(data).forEach(([key, value]) => {
       scrubPatterns.forEach(({ id, regex, replacement }) => {
         if (typeof value === 'string' && regex.test(value)) {
@@ -50,13 +55,12 @@ const piiScrubberTask = (
           scrubbedFields.push(key);
         }
       });
-
-
+  
       if (typeof value === 'string' && isUrlWithOptionalQuery(value)) {
         try {
           const url = new URL(value);
           const params = new URLSearchParams(url.search);
-      
+  
           // Process blacklisted parameters
           blackListedQueryStringParameters.forEach(param => {
             if (params.has(param)) {
@@ -70,13 +74,12 @@ const piiScrubberTask = (
               scrubbedFields.push(param);
             }
           });
-      
+  
           // Process query string values for scrub patterns
           params.forEach((value, param) => {
             scrubPatterns.forEach(({ id, regex, replacement }) => {
-
               if (regex.test(value)) {
-                const scrubbedValue = value.replace(regex,replacement);
+                const scrubbedValue = value.replace(regex, replacement);
                 params.set(param, scrubbedValue);
                 scrubbedValues[key] = {
                   origin,
@@ -88,7 +91,7 @@ const piiScrubberTask = (
               }
             });
           });
-      
+  
           // Update the URL's search parameters and assign it to data
           url.search = params.toString();
           data[key] = url.toString();
@@ -98,6 +101,7 @@ const piiScrubberTask = (
       }
     });
   };
+  
 
   // Scrub sharedPayload
   scrubData(request.sharedPayload, 'sharedPayload');

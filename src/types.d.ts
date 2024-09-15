@@ -12,10 +12,10 @@ interface Event {
 type FetchArgs = [RequestInfo | URL, RequestInit?];
 
 interface Interceptor {
-    request?: (...args: FetchArgs) => FetchArgs | Promise<FetchArgs>;
-    requestError?: (error: any) => any;
-    response?: (response: Response) => Response | Promise<Response>;
-    responseError?: (error: any) => any;
+  request?: (...args: FetchArgs) => FetchArgs | Promise<FetchArgs>;
+  requestError?: (error: any) => Promise<FetchArgs>;
+  response?: (response: Response) => Response | Promise<Response>;
+  responseError?: (error: any) => Promise<Response>;
 }
 
 interface GA4CustomTaskSettings {
@@ -25,7 +25,7 @@ interface GA4CustomTaskSettings {
 
 interface RequestModel {
   endpoint: string;
-  sharedPayload: { [key: string]: any } | null;
+  sharedPayload: { [key: string]: any }; // No need for null in the type
   events: { [key: string]: any }[];
   __skip?: boolean;
 }

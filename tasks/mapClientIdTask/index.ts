@@ -12,8 +12,8 @@ const mapClientIdTask = (
   scope: 'event' | 'user' = 'event'
 ): RequestModel => {
   // Validate input parameters
-  if (!request || !name) {
-    console.error('mapPayloadSizeTask: Request and name are required.');
+  if (!request || !name || !request.sharedPayload || !request.sharedPayload.cid) {
+    console.error('mapClientIdTask: Invalid input. Request, name, and client ID are required.');
     return request;
   }
 
@@ -22,11 +22,11 @@ const mapClientIdTask = (
   // Process based on the scope
   if (scope === 'user' && request.events.length > 0) {
     // Add the client ID to the first event if scope is 'user'
-    request.events[0][`up.${name}`] = request.sharedPayload.cid;
+    request.events[0][`up.${name}`] = request.sharedPayload!.cid;
   } else {
     // Add the client ID to all events if scope is 'event'
     request.events.forEach(event => {
-      event[clientIdKey] = request.sharedPayload.cid;
+      event[clientIdKey] = request.sharedPayload!.cid;
     });
   }
 

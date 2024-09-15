@@ -1,5 +1,6 @@
 import isGA4Hit from './helpers/isGA4Hit';
 let interceptors: Interceptor[] = [];
+type FetchArgs = [RequestInfo | URL, RequestInit?];
 
 // Interceptor function to handle fetch requests and responses
 function interceptor(fetch: typeof window.fetch, args: FetchArgs): Promise<Response> {
@@ -36,13 +37,13 @@ function interceptor(fetch: typeof window.fetch, args: FetchArgs): Promise<Respo
 const GA4CustomTask = function (settings: GA4CustomTaskSettings) {
   if (!settings) return;
   interceptors.push({
-    request: function (resource: RequestInfo, options: RequestInit = {}) {
+    request: function (resource: URL | RequestInfo, options: RequestInit = {}): FetchArgs {
       try {
         if (typeof resource === 'string' && isGA4Hit(resource)) {
           const url = new URL(resource);
           let RequestModel: RequestModel = {
             endpoint: url.origin + url.pathname,
-            sharedPayload: null,
+            sharedPayload: {},
             events: [],
           };
 
