@@ -2,7 +2,7 @@
     "name": "the-return-of-the-custom-task",
     "private": true,
     "author": "David Vallejo <david@> (https://www.thyngster.com/)",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "license": "Apache-2.0",
     "type": "module",
     "scripts": {
