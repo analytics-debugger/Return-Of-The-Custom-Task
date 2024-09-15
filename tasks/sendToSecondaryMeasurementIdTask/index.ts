@@ -1,5 +1,3 @@
-// src/tasks/sendToSecondaryMeasurementIdTask.ts
-
 /**
  * Sends a copy to a secondary Measurement Ids
  * You can control which events to copy

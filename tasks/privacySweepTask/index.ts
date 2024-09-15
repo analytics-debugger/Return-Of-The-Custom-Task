@@ -1,5 +1,3 @@
-// src/tasks/privacySweepTask.ts
-
 /**
  * Removes all parameters that are not privacy friendly or that are not reported on Google Analytics 4 in any way.
  * 

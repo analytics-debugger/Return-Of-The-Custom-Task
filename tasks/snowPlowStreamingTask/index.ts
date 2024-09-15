@@ -1,5 +1,3 @@
-// src/tasks/snowPlowStreamingTask.ts
-
 /**
  * Sends a copy of the payload to a Snowplow endpoint. 
  * 

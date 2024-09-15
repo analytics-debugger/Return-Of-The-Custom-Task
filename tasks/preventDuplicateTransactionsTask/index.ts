@@ -1,6 +1,5 @@
-// src/tasks/preventDuplicateTransactionsTask.ts
-
 import storageHelper from '../../src/helpers/storageHelper';
+
 /**
  * Monitors purchase events and keeps track of transaction IDs to prevent duplicate transactions.
  * Used a synced dual localStorage and cookie storage to store transaction IDs.
@@ -8,7 +7,8 @@ import storageHelper from '../../src/helpers/storageHelper';
  * @param request - The request model to be modified.
  * @param storeName - The storage type to be used. Defaults to 'cookie'.
  * @returns The modified payload object.
- */
+*/
+
 const preventDuplicateTransactionsTask = (
   request: RequestModel,
   storeName: string = '__ad_trans_dedup'

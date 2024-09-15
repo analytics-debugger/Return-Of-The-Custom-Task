@@ -1,5 +1,3 @@
-// src/tasks/mapClientIdTask.ts
-
 /**
  * Adds a client ID to the payload object to the specified event/property name and scope.
  * 

@@ -1,5 +1,3 @@
-// src/tasks/piiScrubber.ts
-
 /**
  * Scrubs PII from the request payload.
  *
