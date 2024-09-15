@@ -30,7 +30,7 @@ Not only this, I tool some time to port and improve all the customTask I was abl
 One we have loaded the GA4CustomTask.js code we need to instanciate our Tasker:
 
 ```
-const ga4CustomTaskInterceptor = new GA4CustomTask({
+var ga4CustomTaskInterceptor = new GA4CustomTask({
     allowedMeasurementIds: ["G-DEBUGEMALL"],
     tasks: [
         logRequestsToConsoleTask,
@@ -55,10 +55,12 @@ You can create your own custom tasks. By default, the library provides a `Reques
 
 ```
 interface RequestModel {
-    sharedPayload: { [key: string]: any };
-    events: { [key: string]: any }[];
-    __skip?: boolean;
+  endpoint: string;
+  sharedPayload: { [key: string]: any }; // No need for null in the type
+  events: { [key: string]: any }[];
+  __skip?: boolean;
 }
+
 ```
 
 ```
@@ -132,17 +134,31 @@ const ga4CustomTaskInterceptor = new GA4CustomTask({
 Some tasks may require parameters, In that case we'll need to pass the paremter this way
 
 ```
-
-var mapClientIdTask = () => {...} // Copy from dist folder
+const mapClientIdTask = () => {...} // Copy from dist folder
 const ga4CustomTaskInterceptor = new GA4CustomTask({
     allowedMeasurementIds: ["G-DEBUGEMALL"],
     tasks: [
-        (payload) => mapClientIdTask(payload, 'client_id')
+        (request) => mapClientIdTask(request, 'client_id')
     ]
 });
 ```
+In GTM we woh't be able to use arrow functions or const 
+```
+var mapClientIdTask = function(payload, clientId) {
+    // Function body copied from dist folder
+};
+var ga4CustomTaskInterceptor = new GA4CustomTask({
+    allowedMeasurementIds: ["G-DEBUGEMALL"],
+    tasks: [
+        function(request) {
+            return mapClientIdTask(request, 'client_id');
+        }
+    ]
+});
 
-## Stacking / Chaining Task
+```
+
+## Stacking / Chaining Tasks
 You may add as many tasks as you want, but remember they will be execute secuencially, so apply them wisely.
 
 # The Request Model
