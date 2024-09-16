@@ -8,117 +8,105 @@ var attributionTrackingTask = (function () {
      * @returns The unchanged RequestModel object.
      */
     var attributionTrackingTask = function (request) {
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         // Config File
         var config = {
-            cookie_name: '__ad_attribution',
-            ignored_referrals: ['tagassistant.google.com'],
-            // From ga.js library
-            organic_engines: 'daum:q eniro:search_word naver:query pchome:q images.google:q www.google:q yahoo:p www.yahoo:q msn:q www.bing:q aol:query aol:q lycos:q lycos:query ask:q cnn:query virgilio:qs baidu:wd baidu:word alice:qs yandex:text najdi:q seznam:q rakuten:qt biglobe:q goo.ne:MT search.smt.docomo:MT onet:qt onet:q kvasir:q terra:query rambler:query conduit:q babylon:q search-results:q avg:q comcast:q incredimail:q startsiden:q go.mail.ru:q centrum.cz:q 360.cn:q sogou:query tut.by:query globo:q ukr:q so.com:q haosou.com:q auone:q'.split(' '),
-            cookie_expiration_days: 365
+            cookieName: '__ad_attribution',
+            ignoredReferrals: ['tagassistant.google.com'],
+            organicEngines: 'daum:q eniro:search_word naver:query pchome:q images.google:q www.google:q yahoo:p www.yahoo:q msn:q www.bing:q aol:query aol:q lycos:q lycos:query ask:q cnn:query virgilio:qs baidu:wd baidu:word alice:qs yandex:text najdi:q seznam:q rakuten:qt biglobe:q goo.ne:MT search.smt.docomo:MT onet:qt onet:q kvasir:q terra:query rambler:query conduit:q babylon:q search-results:q avg:q comcast:q incredimail:q startsiden:q go.mail.ru:q centrum.cz:q 360.cn:q sogou:query tut.by:query globo:q ukr:q so.com:q haosou.com:q auone:q'.split(' '),
+            cookieExpirationDays: 365
         };
-        var referrer = document.referrer;
-        var currentUrl = location.href;
-        var attributionDetails = { first: null, current: null };
-        var utmValues = { utmcsr: '', utmccn: '', utmcmd: '', utmctr: '', utmcct: '', utmcid: '', utmgclid: '' };
-        var isIgnoredReferral = function (_referrer) {
-            return config.ignored_referrals.some(function (ref) { return _referrer.match(ref); });
+        var campaignDetails = {
+            medium: '',
+            source: '',
+            campaign: '',
+            content: '',
+            term: '',
+            id: '',
+            gclid: '',
+            timestamp: Date.now()
         };
-        var isOrganic = function (r, o) {
-            return o.some(function (engine) { return r.includes(engine.split(':')[0]); }) ? 0 : -1;
-        };
-        var getParameterByName = function (name, url) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            var regex = new RegExp("[\\?&]".concat(name.toLowerCase(), "=([^&#]*)"));
-            var results = regex.exec(url.toLowerCase());
-            return results ? decodeURIComponent(results[1].replace(/\+/g, ' ')) : '';
-        };
-        var hashCode = function (s) {
-            var h = 0;
-            for (var i = 0; i < s.length; i++) {
-                h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-            }
-            return h;
-        };
-        var getUrlParts = function (url) {
-            if (!url)
-                return {};
-            var l = document.createElement('a');
-            l.href = url;
-            return {
-                domain: l.hostname.startsWith('www.') ? l.hostname.substring(4) : l.hostname,
-                path: l.pathname
-            };
-        };
-        var hashAttribution = function (utmValues) {
-            var c = Object.entries(utmValues).filter(function (_a) {
-                _a[0]; var value = _a[1];
-                return value !== '';
-            }).map(function (_a) {
-                var key = _a[0], value = _a[1];
-                return "".concat(key, "=").concat(value);
+        var _j = request.sharedPayload, documentReferrer = _j.dr, _k = _j.dl, documentLocation = _k === void 0 ? document.location.href : _k;
+        var referrerUrl = null;
+        var locationUrl = null;
+        var urlParams = {};
+        try {
+            referrerUrl = documentReferrer ? new URL(documentReferrer) : null;
+        }
+        catch (_l) {
+            referrerUrl = null;
+        }
+        try {
+            locationUrl = new URL(documentLocation);
+            var params = new URLSearchParams(locationUrl.search);
+            params.forEach(function (value, key) {
+                urlParams[key] = value;
             });
-            return hashCode(c.join('|')).toString();
+        }
+        catch (_m) {
+            locationUrl = null;
+        }
+        var getRootDomain = function (url) {
+            var domainParts = (url || document.location.hostname).split('.');
+            for (var i = 1; i < domainParts.length; i++) {
+                var testDomain = domainParts.slice(-i).join('.');
+                document.cookie = "testcookie=1; domain=".concat(testDomain, "; path=/");
+                if (document.cookie.includes('testcookie=1')) {
+                    document.cookie = "testcookie=1; domain=".concat(testDomain, "; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT");
+                    return testDomain;
+                }
+            }
+            return document.location.hostname;
         };
-        // Logic, if we have a glicd, we can assume it's a google ad let's set the values accordingly    
-        if (currentUrl.match(/gclid=([^&]+)/)) {
-            var gclidMatch = currentUrl.match(/gclid=([^&]+)/);
-            utmValues.utmgclid = gclidMatch[1];
-            utmValues.utmcsr = 'google';
-            utmValues.utmcmd = 'cpc';
-            utmValues.utmccn = 'google ads';
-            // Then we need to check the current UTM values
+        var isInIgnoredReferrersList = function () {
+            return config.ignoredReferrals.some(function (ref) { var _a; return (_a = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname.includes(ref)) !== null && _a !== void 0 ? _a : false; });
+        };
+        var isOrganic = function () {
+            return config.organicEngines.some(function (engine) { var _a; return (_a = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname.includes(engine.split(':')[0])) !== null && _a !== void 0 ? _a : false; });
+        };
+        var isGoogleCPC = function () { var _a; return (_a = urlParams.gclid) !== null && _a !== void 0 ? _a : null; };
+        var isSelfReferral = function () { var _a; return (_a = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname.includes(getRootDomain(document.location.href))) !== null && _a !== void 0 ? _a : false; };
+        var isUtmTagged = function () {
+            return urlParams.utm_source !== undefined;
+        };
+        // Main Logic
+        if (isGoogleCPC()) {
+            campaignDetails.gclid = isGoogleCPC();
+            campaignDetails.medium = 'cpc';
+            campaignDetails.source = 'google';
+            campaignDetails.campaign = 'autotagged ad campaign';
         }
-        else if (getParameterByName('utm_source', currentUrl)) {
-            utmValues.utmcsr = getParameterByName('utm_source', currentUrl);
-            utmValues.utmcmd = getParameterByName('utm_medium', currentUrl) || '(not set)';
-            utmValues.utmccn = getParameterByName('utm_campaign', currentUrl) || '(not set)';
-            utmValues.utmctr = getParameterByName('utm_term', currentUrl) || '(not set)';
-            utmValues.utmcct = getParameterByName('utm_content', currentUrl) || '(not set)';
-            // Third is checking the referrer if it's from an organic source
+        else if (isUtmTagged()) {
+            campaignDetails.medium = (_a = urlParams.utm_medium) !== null && _a !== void 0 ? _a : '';
+            campaignDetails.source = (_b = urlParams.utm_source) !== null && _b !== void 0 ? _b : '';
+            campaignDetails.campaign = (_c = urlParams.utm_campaign) !== null && _c !== void 0 ? _c : '';
+            campaignDetails.content = (_d = urlParams.utm_content) !== null && _d !== void 0 ? _d : '';
+            campaignDetails.term = (_e = urlParams.utm_term) !== null && _e !== void 0 ? _e : '';
         }
-        else if (isOrganic(referrer, config.organic_engines) > -1) {
-            var referrerParts = getUrlParts(referrer);
-            utmValues.utmcsr = referrerParts.domain;
-            utmValues.utmcmd = 'organic';
-            utmValues.utmccn = '(not set)';
-            utmValues.utmctr = '(not provided)';
-            utmValues.utmcct = '(not set)';
+        else if (isOrganic()) {
+            campaignDetails.medium = 'organic';
+            campaignDetails.source = ((_f = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _f !== void 0 ? _f : '').replace('www.', '');
+            campaignDetails.campaign = '(organic)';
+            campaignDetails.term = '(not provided)';
         }
-        else if (currentUrl.indexOf(getRootDomain(referrer)) === -1) {
-            if (isIgnoredReferral(referrer)) {
-                utmValues.utmcsr = '(direct)';
-                utmValues.utmcmd = '(none)';
-                utmValues.utmccn = '(direct)';
-                utmValues.utmctr = '(not set)';
-                utmValues.utmcct = '(not set)';
-            }
-            else {
-                var referrerParts = getUrlParts(referrer);
-                utmValues.utmcsr = referrerParts.domain || '';
-                utmValues.utmcmd = 'referral';
-                utmValues.utmccn = '(not set)';
-                utmValues.utmctr = referrerParts.path || '';
-                utmValues.utmcct = '(not set)';
-            }
+        else if (isInIgnoredReferrersList() || isSelfReferral()) {
+            campaignDetails.medium = '(none)';
+            campaignDetails.source = '(direct)';
+            campaignDetails.campaign = '(direct)';
+        }
+        else if (documentReferrer) {
+            campaignDetails.medium = 'referral';
+            campaignDetails.source = (_g = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _g !== void 0 ? _g : '';
+            campaignDetails.campaign = '(referral)';
+            campaignDetails.content = (_h = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.pathname) !== null && _h !== void 0 ? _h : '';
+            campaignDetails.term = '(not set)';
         }
         else {
-            utmValues.utmcsr = '(direct)';
-            utmValues.utmcmd = '(none)';
-            utmValues.utmccn = '(direct)';
-            utmValues.utmctr = '(not set)';
-            utmValues.utmcct = '(not set)';
+            campaignDetails.medium = '(none)';
+            campaignDetails.source = '(direct)';
+            campaignDetails.campaign = '(direct)';
         }
-        var cookieInfo = getCookie();
-        if (!cookieInfo) {
-            attributionDetails.first = attributionDetails.current = utmValues;
-            setCookie(encodeURIComponent(JSON.stringify(attributionDetails)));
-        }
-        else if (utmValues.utmcsr !== '(direct)' && hashAttribution(cookieInfo.current) !== hashAttribution(utmValues)) {
-            attributionDetails.first = cookieInfo.first;
-            attributionDetails.current = utmValues;
-            setCookie(encodeURIComponent(JSON.stringify(attributionDetails)));
-        }
-        // Return the RequestModel object as is
+        console.log(campaignDetails);
         return request;
     };
 

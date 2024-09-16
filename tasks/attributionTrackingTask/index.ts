@@ -1,14 +1,3 @@
-interface CampaignDetails {
-  timestamp: number; // Timestamp field in milliseconds
-  medium: string;
-  source: string;
-  campaign: string;  
-  content: string;
-  term: string;
-  id: string;
-  gclid: string;  
-}
-
 /**
  * Prints the current RequestModel to the console.
  * 
@@ -27,18 +16,7 @@ interface CampaignDetails {
   timestamp: number;
 }
 
-interface CampaignDetails {
-  medium: string;
-  source: string;
-  campaign: string;
-  content: string;
-  term: string;
-  id: string;
-  gclid: string;
-  timestamp: number;
-}
-
-const attributionTrackingTask = (request: RequestPayload): RequestPayload => {
+const attributionTrackingTask = (request: RequestModel): RequestModel => {
   // Config File
   const config = {
     cookieName: '__ad_attribution',
