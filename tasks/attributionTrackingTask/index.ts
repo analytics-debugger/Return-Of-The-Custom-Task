@@ -17,10 +17,20 @@ interface CampaignDetailsModel {
 }
 
 const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string[]): RequestModel => {
+
+  const isSessionStart: boolean = request.events.some(event => '_ss' in event);
+  const hasCampaignData: boolean = 'cs' in request.sharedPayload;
+  const hasCampaignDetailsEvent: boolean = request.events.some(event => event.en === 'campaign_details');
+
+  // well, well, well, let's ignore this request
+  if (!isSessionStart || !hasCampaignData || !hasCampaignDetailsEvent) {
+    return request;
+  }
+  
   // Config File
   const config = {
     cookieName: '__ad_attribution',
-    ignoredReferrals: ['tagassistant.google.com'],
+    ignoredReferrals: ['tagassistant.google.com'].concat(ignoredReferrals),
     organicEngines: 'daum,eniro,naver,pchome,images.google,www.google,yahoo,www.yahoo,msn,www.bing,aol,aol,lycos,lycos,ask,cnn,virgilio,baidu,baidu,alice,yandex,najdi,seznam,rakuten,biglobe,goo.ne,search.smt.docomo,onet,onet,kvasir,terra,rambler,conduit,babylon,search-results,avg,comcast,incredimail,startsiden,go.mail.ru,centrum.cz,360.cn,sogou,tut.by,globo,ukr,so.com,haosou.com,auone',
     cookieExpirationDays: 365
   };
@@ -117,8 +127,6 @@ const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string
     campaignDetails.cs = '(direct)';
     campaignDetails.cn = '(direct)';
   }
-
-  console.log(campaignDetails);
   return request;
 };
 
