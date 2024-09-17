@@ -5,35 +5,35 @@
  * @returns The unchanged RequestModel object.
  */
 
-interface CampaignDetails {
-  medium: string;
-  source: string;
-  campaign: string;
-  content: string;
-  term: string;
-  id: string;
-  gclid: string;
-  timestamp: number;
+interface CampaignDetailsModel {
+  cm: string; // Medium
+  cs: string; // Source
+  cn: string; // Campaign Name
+  cc: string; // Content
+  ct: string; // Term
+  ci: string; // Umt ID
+  gclid: string; 
+  ts: number; // TimeStamp
 }
 
-const attributionTrackingTask = (request: RequestModel): RequestModel => {
+const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string[]): RequestModel => {
   // Config File
   const config = {
     cookieName: '__ad_attribution',
     ignoredReferrals: ['tagassistant.google.com'],
-    organicEngines: 'daum:q eniro:search_word naver:query pchome:q images.google:q www.google:q yahoo:p www.yahoo:q msn:q www.bing:q aol:query aol:q lycos:q lycos:query ask:q cnn:query virgilio:qs baidu:wd baidu:word alice:qs yandex:text najdi:q seznam:q rakuten:qt biglobe:q goo.ne:MT search.smt.docomo:MT onet:qt onet:q kvasir:q terra:query rambler:query conduit:q babylon:q search-results:q avg:q comcast:q incredimail:q startsiden:q go.mail.ru:q centrum.cz:q 360.cn:q sogou:query tut.by:query globo:q ukr:q so.com:q haosou.com:q auone:q'.split(' '),
+    organicEngines: 'daum,eniro,naver,pchome,images.google,www.google,yahoo,www.yahoo,msn,www.bing,aol,aol,lycos,lycos,ask,cnn,virgilio,baidu,baidu,alice,yandex,najdi,seznam,rakuten,biglobe,goo.ne,search.smt.docomo,onet,onet,kvasir,terra,rambler,conduit,babylon,search-results,avg,comcast,incredimail,startsiden,go.mail.ru,centrum.cz,360.cn,sogou,tut.by,globo,ukr,so.com,haosou.com,auone',
     cookieExpirationDays: 365
   };
 
-  const campaignDetails: CampaignDetails = {
-    medium: '',
-    source: '',
-    campaign: '',
-    content: '',
-    term: '',
-    id: '',
+  const campaignDetails: CampaignDetailsModel = {
+    cm: '',
+    cs: '',
+    cn: '',
+    cc: '',
+    ct: '',
+    ci: '',
     gclid: '',
-    timestamp: Date.now()
+    ts: Date.now()
   };
 
   const { dr: documentReferrer, dl: documentLocation = document.location.href } = request.sharedPayload;
@@ -75,7 +75,7 @@ const attributionTrackingTask = (request: RequestModel): RequestModel => {
     config.ignoredReferrals.some(ref => referrerUrl?.hostname.includes(ref) ?? false);
 
   const isOrganic = (): boolean =>
-    config.organicEngines.some(engine => referrerUrl?.hostname.includes(engine.split(':')[0]) ?? false);
+    config.organicEngines.some(engine => referrerUrl?.hostname.includes(engine) ?? false);
 
   const isGoogleCPC = (): string | null => urlParams.gclid ?? null;
 
@@ -88,34 +88,34 @@ const attributionTrackingTask = (request: RequestModel): RequestModel => {
   // Main Logic
   if (isGoogleCPC()) {
     campaignDetails.gclid = isGoogleCPC()!;
-    campaignDetails.medium = 'cpc';
-    campaignDetails.source = 'google';
-    campaignDetails.campaign = 'autotagged ad campaign';
+    campaignDetails.cm = 'cpc';
+    campaignDetails.cs = 'google';
+    campaignDetails.cn = 'autotagged ad campaign';
   } else if (isUtmTagged()) {
-    campaignDetails.medium = urlParams.utm_medium ?? '';
-    campaignDetails.source = urlParams.utm_source ?? '';
-    campaignDetails.campaign = urlParams.utm_campaign ?? '';
-    campaignDetails.content = urlParams.utm_content ?? '';
-    campaignDetails.term = urlParams.utm_term ?? '';
+    campaignDetails.cm = urlParams.utm_medium ?? '';
+    campaignDetails.cs = urlParams.utm_source ?? '';
+    campaignDetails.cn = urlParams.utm_campaign ?? '';
+    campaignDetails.cc = urlParams.utm_content ?? '';
+    campaignDetails.ct = urlParams.utm_term ?? '';
   } else if (isOrganic()) {
-    campaignDetails.medium = 'organic';
-    campaignDetails.source = (referrerUrl?.hostname ?? '').replace('www.', '');
-    campaignDetails.campaign = '(organic)';
-    campaignDetails.term = '(not provided)';
+    campaignDetails.cm = 'organic';
+    campaignDetails.cs = (referrerUrl?.hostname ?? '').replace('www.', '');
+    campaignDetails.cn = '(organic)';
+    campaignDetails.ct = '(not provided)';
   } else if (isInIgnoredReferrersList() || isSelfReferral()) {
-    campaignDetails.medium = '(none)';
-    campaignDetails.source = '(direct)';
-    campaignDetails.campaign = '(direct)';
+    campaignDetails.cm = '(none)';
+    campaignDetails.cs = '(direct)';
+    campaignDetails.cn = '(direct)';
   } else if (documentReferrer) {
-    campaignDetails.medium = 'referral';
-    campaignDetails.source = referrerUrl?.hostname ?? '';
-    campaignDetails.campaign = '(referral)';
-    campaignDetails.content = referrerUrl?.pathname ?? '';
-    campaignDetails.term = '(not set)';
+    campaignDetails.cm = 'referral';
+    campaignDetails.cs = referrerUrl?.hostname ?? '';
+    campaignDetails.cn = '(referral)';
+    campaignDetails.cc = referrerUrl?.pathname ?? '';
+    campaignDetails.ct = '(not set)';
   } else {
-    campaignDetails.medium = '(none)';
-    campaignDetails.source = '(direct)';
-    campaignDetails.campaign = '(direct)';
+    campaignDetails.cm = '(none)';
+    campaignDetails.cs = '(direct)';
+    campaignDetails.cn = '(direct)';
   }
 
   console.log(campaignDetails);

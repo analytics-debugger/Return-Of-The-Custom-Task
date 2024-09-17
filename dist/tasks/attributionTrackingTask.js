@@ -17,14 +17,14 @@ var attributionTrackingTask = (function () {
             cookieExpirationDays: 365
         };
         var campaignDetails = {
-            medium: '',
-            source: '',
-            campaign: '',
-            content: '',
-            term: '',
-            id: '',
+            cm: '',
+            cs: '',
+            cn: '',
+            cc: '',
+            ct: '',
+            ci: '',
             gclid: '',
-            timestamp: Date.now()
+            ts: Date.now()
         };
         var _j = request.sharedPayload, documentReferrer = _j.dr, _k = _j.dl, documentLocation = _k === void 0 ? document.location.href : _k;
         var referrerUrl = null;
@@ -72,39 +72,39 @@ var attributionTrackingTask = (function () {
         // Main Logic
         if (isGoogleCPC()) {
             campaignDetails.gclid = isGoogleCPC();
-            campaignDetails.medium = 'cpc';
-            campaignDetails.source = 'google';
-            campaignDetails.campaign = 'autotagged ad campaign';
+            campaignDetails.cm = 'cpc';
+            campaignDetails.cs = 'google';
+            campaignDetails.cn = 'autotagged ad campaign';
         }
         else if (isUtmTagged()) {
-            campaignDetails.medium = (_a = urlParams.utm_medium) !== null && _a !== void 0 ? _a : '';
-            campaignDetails.source = (_b = urlParams.utm_source) !== null && _b !== void 0 ? _b : '';
-            campaignDetails.campaign = (_c = urlParams.utm_campaign) !== null && _c !== void 0 ? _c : '';
-            campaignDetails.content = (_d = urlParams.utm_content) !== null && _d !== void 0 ? _d : '';
-            campaignDetails.term = (_e = urlParams.utm_term) !== null && _e !== void 0 ? _e : '';
+            campaignDetails.cm = (_a = urlParams.utm_medium) !== null && _a !== void 0 ? _a : '';
+            campaignDetails.cs = (_b = urlParams.utm_source) !== null && _b !== void 0 ? _b : '';
+            campaignDetails.cn = (_c = urlParams.utm_campaign) !== null && _c !== void 0 ? _c : '';
+            campaignDetails.cc = (_d = urlParams.utm_content) !== null && _d !== void 0 ? _d : '';
+            campaignDetails.ct = (_e = urlParams.utm_term) !== null && _e !== void 0 ? _e : '';
         }
         else if (isOrganic()) {
-            campaignDetails.medium = 'organic';
-            campaignDetails.source = ((_f = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _f !== void 0 ? _f : '').replace('www.', '');
-            campaignDetails.campaign = '(organic)';
-            campaignDetails.term = '(not provided)';
+            campaignDetails.cm = 'organic';
+            campaignDetails.cs = ((_f = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _f !== void 0 ? _f : '').replace('www.', '');
+            campaignDetails.cn = '(organic)';
+            campaignDetails.ct = '(not provided)';
         }
         else if (isInIgnoredReferrersList() || isSelfReferral()) {
-            campaignDetails.medium = '(none)';
-            campaignDetails.source = '(direct)';
-            campaignDetails.campaign = '(direct)';
+            campaignDetails.cm = '(none)';
+            campaignDetails.cs = '(direct)';
+            campaignDetails.cn = '(direct)';
         }
         else if (documentReferrer) {
-            campaignDetails.medium = 'referral';
-            campaignDetails.source = (_g = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _g !== void 0 ? _g : '';
-            campaignDetails.campaign = '(referral)';
-            campaignDetails.content = (_h = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.pathname) !== null && _h !== void 0 ? _h : '';
-            campaignDetails.term = '(not set)';
+            campaignDetails.cm = 'referral';
+            campaignDetails.cs = (_g = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _g !== void 0 ? _g : '';
+            campaignDetails.cn = '(referral)';
+            campaignDetails.cc = (_h = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.pathname) !== null && _h !== void 0 ? _h : '';
+            campaignDetails.ct = '(not set)';
         }
         else {
-            campaignDetails.medium = '(none)';
-            campaignDetails.source = '(direct)';
-            campaignDetails.campaign = '(direct)';
+            campaignDetails.cm = '(none)';
+            campaignDetails.cs = '(direct)';
+            campaignDetails.cn = '(direct)';
         }
         console.log(campaignDetails);
         return request;
