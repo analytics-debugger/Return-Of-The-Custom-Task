@@ -7,10 +7,10 @@ interface StorageHelper {
   
 
 interface StorageHelper {
-  sync(name: string): void;
-  get(name: string): string | null;
-  set(name: string, value: string, days?: number, path?: string, domain?: string): void;
-  getDecodedCookie<T = any>(name: string): T | null;
+    sync(name: string): void;
+    get(name: string): string | null;
+    set(name: string, value: string, days?: number, path?: string, domain?: string): void;
+    getDecodedCookie<T = any>(name: string): T | null;
 }
 
 const storageHelper: StorageHelper = {
@@ -20,6 +20,7 @@ const storageHelper: StorageHelper = {
       try {
         valueFromCookie = this.getDecodedCookie<string>(name);
       } catch (error) {
+        console.error('Error getting cookie:', error);
       }
 
       const valueFromLocalStorage = localStorage.getItem(name);
@@ -28,11 +29,10 @@ const storageHelper: StorageHelper = {
       console.error('Error in sync method:', error);
     }
   },
-  
+    
   get(name: string): string | null {
-    try {
-      // Uncomment the following line if you want to ensure synchronization before getting the value
-      // this.sync(name);
+    try {      
+      this.sync(name);
       const value = localStorage.getItem(name);
       return value || null;
     } catch (error) {
@@ -40,7 +40,7 @@ const storageHelper: StorageHelper = {
       return null;
     }
   },
-  
+    
   set(name: string, value: string, days: number = 7, path: string = '/', domain: string = ''): void {
     try {
       const safeValue = btoa(value);
@@ -51,7 +51,7 @@ const storageHelper: StorageHelper = {
       console.error('Error in set method:', error);
     }
   },
-  
+    
   getDecodedCookie<T = any>(name: string): T | null {
     try {
       const cookie = document.cookie.split('; ').find(row => row.startsWith(name + '='));

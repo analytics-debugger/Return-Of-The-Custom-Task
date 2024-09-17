@@ -9,6 +9,7 @@ var preventDuplicateTransactionsTask = (function () {
                     valueFromCookie = this.getDecodedCookie(name);
                 }
                 catch (error) {
+                    console.error('Error getting cookie:', error);
                 }
                 var valueFromLocalStorage = localStorage.getItem(name);
                 this.set(name, valueFromCookie || valueFromLocalStorage || '');
@@ -19,8 +20,7 @@ var preventDuplicateTransactionsTask = (function () {
         },
         get: function (name) {
             try {
-                // Uncomment the following line if you want to ensure synchronization before getting the value
-                // this.sync(name);
+                this.sync(name);
                 var value = localStorage.getItem(name);
                 return value || null;
             }
