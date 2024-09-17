@@ -1,54 +1,71 @@
 interface StorageHelper {
-    sync(name: string): void;
-    get(name: string): string | null;
-    set(name: string, value: string, days?: number, path?: string, domain?: string): void;
-  }
+  sync(name: string): void;
+  get(name: string): string | null;
+  set(name: string, value: string, days?: number, path?: string, domain?: string): void;
+  getDecodedCookie<T = any>(name: string): T | null;
+}
   
+
+interface StorageHelper {
+  sync(name: string): void;
+  get(name: string): string | null;
+  set(name: string, value: string, days?: number, path?: string, domain?: string): void;
+  getDecodedCookie<T = any>(name: string): T | null;
+}
+
 const storageHelper: StorageHelper = {
   sync(name: string): void {
-    const cookie = document.cookie.split('; ').find(row => row.startsWith(name + '='));
-    const valueFromLocalStorage = localStorage.getItem(name);
-      
-    const valueFromCookie = cookie ? cookie.split('=')[1] : null;
-      
-    if (valueFromCookie !== null) {
-      const decodedValue = decodeURIComponent(valueFromCookie);
-      const timestampFromCookie = parseInt(decodedValue.split(':')[0], 10);
-      const timestampFromLocalStorage = valueFromLocalStorage ? parseInt(valueFromLocalStorage.split(':')[0], 10) : 0;
-      
-      if (timestampFromCookie > timestampFromLocalStorage) {
-        localStorage.setItem(name, decodedValue);
-      } else if (timestampFromLocalStorage > timestampFromCookie) {
-        if (valueFromLocalStorage !== null) {
-          document.cookie = `${name}=${encodeURIComponent(valueFromLocalStorage)}; path=/; SameSite=Strict; Secure`;
-        }
+    try {
+      let valueFromCookie: string | null = null;
+      try {
+        valueFromCookie = this.getDecodedCookie<string>(name);
+      } catch (error) {
       }
-    } else {
-      // Handle case where cookie is null
-      if (valueFromLocalStorage !== null) {
-        document.cookie = `${name}=${encodeURIComponent(valueFromLocalStorage)}; path=/; SameSite=Strict; Secure`;
-      }
+
+      const valueFromLocalStorage = localStorage.getItem(name);
+      this.set(name, valueFromCookie || valueFromLocalStorage || '');
+    } catch (error) {
+      console.error('Error in sync method:', error);
     }
   },
   
   get(name: string): string | null {
-    this.sync(name);
-    const value = localStorage.getItem(name);
-    return value ? value.split(':')[1] || null : null;
+    try {
+      // Uncomment the following line if you want to ensure synchronization before getting the value
+      // this.sync(name);
+      const value = localStorage.getItem(name);
+      return value || null;
+    } catch (error) {
+      console.error('Error in get method:', error);
+      return null;
+    }
   },
   
   set(name: string, value: string, days: number = 7, path: string = '/', domain: string = ''): void {
-    const timestamp = Date.now();
-    const valueWithTimestamp = `${timestamp}:${value}`;
-      
-    const encodedValue = encodeURIComponent(valueWithTimestamp);
-      
-    localStorage.setItem(name, valueWithTimestamp);
+    try {
+      const safeValue = btoa(value);
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = `${name}=${safeValue}; expires=${expires}; path=${path}; domain=${domain}; SameSite=Strict; Secure`;
+      localStorage.setItem(name, value);
+    } catch (error) {
+      console.error('Error in set method:', error);
+    }
+  },
   
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodedValue}; expires=${expires}; path=${path}; domain=${domain}; SameSite=Strict; Secure`;
+  getDecodedCookie<T = any>(name: string): T | null {
+    try {
+      const cookie = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+      if (!cookie) return null;
+      const encodedValue = cookie.split('=')[1];
+      return JSON.parse(atob(encodedValue)) as T;
+    } catch (error) {
+      console.error('Error decoding cookie:', error);
+      return null;
+    }
   }
 };
+
+  
   
 export default storageHelper;
   

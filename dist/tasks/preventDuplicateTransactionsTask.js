@@ -3,44 +3,58 @@ var preventDuplicateTransactionsTask = (function () {
 
     var storageHelper = {
         sync: function (name) {
-            var cookie = document.cookie.split('; ').find(function (row) { return row.startsWith(name + '='); });
-            var valueFromLocalStorage = localStorage.getItem(name);
-            var valueFromCookie = cookie ? cookie.split('=')[1] : null;
-            if (valueFromCookie !== null) {
-                var decodedValue = decodeURIComponent(valueFromCookie);
-                var timestampFromCookie = parseInt(decodedValue.split(':')[0], 10);
-                var timestampFromLocalStorage = valueFromLocalStorage ? parseInt(valueFromLocalStorage.split(':')[0], 10) : 0;
-                if (timestampFromCookie > timestampFromLocalStorage) {
-                    localStorage.setItem(name, decodedValue);
+            try {
+                var valueFromCookie = null;
+                try {
+                    valueFromCookie = this.getDecodedCookie(name);
                 }
-                else if (timestampFromLocalStorage > timestampFromCookie) {
-                    if (valueFromLocalStorage !== null) {
-                        document.cookie = "".concat(name, "=").concat(encodeURIComponent(valueFromLocalStorage), "; path=/; SameSite=Strict; Secure");
-                    }
+                catch (error) {
                 }
+                var valueFromLocalStorage = localStorage.getItem(name);
+                this.set(name, valueFromCookie || valueFromLocalStorage || '');
             }
-            else {
-                // Handle case where cookie is null
-                if (valueFromLocalStorage !== null) {
-                    document.cookie = "".concat(name, "=").concat(encodeURIComponent(valueFromLocalStorage), "; path=/; SameSite=Strict; Secure");
-                }
+            catch (error) {
+                console.error('Error in sync method:', error);
             }
         },
         get: function (name) {
-            this.sync(name);
-            var value = localStorage.getItem(name);
-            return value ? value.split(':')[1] || null : null;
+            try {
+                // Uncomment the following line if you want to ensure synchronization before getting the value
+                // this.sync(name);
+                var value = localStorage.getItem(name);
+                return value || null;
+            }
+            catch (error) {
+                console.error('Error in get method:', error);
+                return null;
+            }
         },
         set: function (name, value, days, path, domain) {
             if (days === void 0) { days = 7; }
             if (path === void 0) { path = '/'; }
             if (domain === void 0) { domain = ''; }
-            var timestamp = Date.now();
-            var valueWithTimestamp = "".concat(timestamp, ":").concat(value);
-            var encodedValue = encodeURIComponent(valueWithTimestamp);
-            localStorage.setItem(name, valueWithTimestamp);
-            var expires = new Date(Date.now() + days * 864e5).toUTCString();
-            document.cookie = "".concat(name, "=").concat(encodedValue, "; expires=").concat(expires, "; path=").concat(path, "; domain=").concat(domain, "; SameSite=Strict; Secure");
+            try {
+                var safeValue = btoa(value);
+                var expires = new Date(Date.now() + days * 864e5).toUTCString();
+                document.cookie = "".concat(name, "=").concat(safeValue, "; expires=").concat(expires, "; path=").concat(path, "; domain=").concat(domain, "; SameSite=Strict; Secure");
+                localStorage.setItem(name, value);
+            }
+            catch (error) {
+                console.error('Error in set method:', error);
+            }
+        },
+        getDecodedCookie: function (name) {
+            try {
+                var cookie = document.cookie.split('; ').find(function (row) { return row.startsWith(name + '='); });
+                if (!cookie)
+                    return null;
+                var encodedValue = cookie.split('=')[1];
+                return JSON.parse(atob(encodedValue));
+            }
+            catch (error) {
+                console.error('Error decoding cookie:', error);
+                return null;
+            }
         }
     };
 

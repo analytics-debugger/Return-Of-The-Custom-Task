@@ -1,9 +1,4 @@
-/**
- * Prints the current RequestModel to the console.
- * 
- * @param request - The RequestModel object to be logged.
- * @returns The unchanged RequestModel object.
- */
+import storageHelper from '../../src/helpers/storageHelper';
 
 interface CampaignDetailsModel {
   cm: string; // Medium
@@ -16,22 +11,53 @@ interface CampaignDetailsModel {
   ts: number; // TimeStamp
 }
 
-const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string[]): RequestModel => {
+
+/**
+ * Handles attribution tracking for the current RequestModel.
+ * 
+ * This function checks if the request contains session start information, campaign data, 
+ * and campaign details events. If any of these are missing, the request is returned unchanged.
+ * Otherwise, it configures attribution tracking settings, such as ignored referrals and the cookie name.
+ * 
+ * @param request - The RequestModel object to be processed.
+ * @param attributionModel: string = 'last_click'
+ * @param storeName - The name of the cookie to be used for attribution (default: '__ad_attribution').
+ * @param ignoredReferrals - The custom list of ignored referrals to be merged with default values.
+ * @returns The unchanged RequestModel object if conditions are not met or after processing.
+ */
+
+const attributionTrackingTask = (
+  request: RequestModel, 
+  attributionModel: string = 'last_click', 
+  storeName: string = 'ad_attribution', 
+  ignoredReferrals: string[]
+): RequestModel => {
 
   const isSessionStart: boolean = request.events.some(event => '_ss' in event);
   const hasCampaignData: boolean = 'cs' in request.sharedPayload;
   const hasCampaignDetailsEvent: boolean = request.events.some(event => event.en === 'campaign_details');
 
   // well, well, well, let's ignore this request
-  if (!isSessionStart || !hasCampaignData || !hasCampaignDetailsEvent) {
+  if (!isSessionStart && !hasCampaignData && !hasCampaignDetailsEvent) {
     return request;
   }
-  
+
+  // TO-DO Need to update this list based on GA4 internal list
+  const defaultIgnoredReferrals = ['tagassistant.google.com'];
+  const defaultOrganicEngines = [
+    'daum', 'eniro', 'naver', 'pchome', 'images.google', 'www.google', 'yahoo', 'www.yahoo', 
+    'msn', 'www.bing', 'aol', 'lycos', 'ask', 'cnn', 'virgilio', 'baidu', 'alice', 'yandex', 
+    'najdi', 'seznam', 'rakuten', 'biglobe', 'goo.ne', 'search.smt.docomo', 'onet', 'kvasir', 
+    'terra', 'rambler', 'conduit', 'babylon', 'search-results', 'avg', 'comcast', 'incredimail', 
+    'startsiden', 'go.mail.ru', 'centrum.cz', '360.cn', 'sogou', 'tut.by', 'globo', 'ukr', 
+    'so.com', 'haosou.com', 'auone'
+  ];  
+
   // Config File
   const config = {
-    cookieName: '__ad_attribution',
-    ignoredReferrals: ['tagassistant.google.com'].concat(ignoredReferrals),
-    organicEngines: 'daum,eniro,naver,pchome,images.google,www.google,yahoo,www.yahoo,msn,www.bing,aol,aol,lycos,lycos,ask,cnn,virgilio,baidu,baidu,alice,yandex,najdi,seznam,rakuten,biglobe,goo.ne,search.smt.docomo,onet,onet,kvasir,terra,rambler,conduit,babylon,search-results,avg,comcast,incredimail,startsiden,go.mail.ru,centrum.cz,360.cn,sogou,tut.by,globo,ukr,so.com,haosou.com,auone',
+    storeName: storeName || '__ad_attribution',
+    ignoredReferrals: defaultIgnoredReferrals.concat(ignoredReferrals),
+    organicEngines: defaultOrganicEngines,
     cookieExpirationDays: 365
   };
 
@@ -85,7 +111,7 @@ const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string
     config.ignoredReferrals.some(ref => referrerUrl?.hostname.includes(ref) ?? false);
 
   const isOrganic = (): boolean =>
-    config.organicEngines.split(',').some(engine => referrerUrl?.hostname.includes(engine) ?? false);
+    config.organicEngines.some(engine => referrerUrl?.hostname.includes(engine) ?? false);
 
   const isGoogleCPC = (): string | null => urlParams.gclid ?? null;
 
@@ -127,6 +153,28 @@ const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string
     campaignDetails.cs = '(direct)';
     campaignDetails.cn = '(direct)';
   }
+  // TO-DO. apply attributionModel, for not it's all last_click
+  /*if(attributionModel === 'last_click') {
+    console.log('MERGE STUFF', {
+      first: campaignDetails, 
+      last: campaignDetails
+    });
+
+  }else if(attributionModel === 'last_click_non_direct') {
+    console.log('MERGE STUFF', {
+      first: campaignDetails, 
+      last: campaignDetails
+    });
+  } else if(attributionModel === 'last_click_non_direct_asdasd') {
+    console.log('MERGE STUFF', {
+      first: campaignDetails, 
+      last: campaignDetails
+    });
+  }c
+    */
+  console.log('MERGE STUFF',JSON.stringify([campaignDetails, campaignDetails]));
+  storageHelper.set(storeName, JSON.stringify([campaignDetails, campaignDetails]));
+  // Write to cookie
   return request;
 };
 
