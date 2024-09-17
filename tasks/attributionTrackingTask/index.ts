@@ -75,7 +75,7 @@ const attributionTrackingTask = (request: RequestModel, ignoredReferrals: string
     config.ignoredReferrals.some(ref => referrerUrl?.hostname.includes(ref) ?? false);
 
   const isOrganic = (): boolean =>
-    config.organicEngines.some(engine => referrerUrl?.hostname.includes(engine) ?? false);
+    config.organicEngines.split(',').some(engine => referrerUrl?.hostname.includes(engine) ?? false);
 
   const isGoogleCPC = (): string | null => urlParams.gclid ?? null;
 
