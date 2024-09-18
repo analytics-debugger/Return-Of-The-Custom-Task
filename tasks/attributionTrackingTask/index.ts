@@ -53,6 +53,58 @@ const attributionTrackingTask = (
 
   // TO-DO Need to update this list based on GA4 internal list
   const defaultIgnoredReferrals = ['tagassistant.google.com'];
+  // src: https://support.google.com/analytics/answer/13682863?hl=en
+  const searchEngines = [
+    { engine: '360.cn', domain: '360.cn', param: 'q' },
+    { engine: 'Alice', domain: 'alice.com', param: 'qs' },
+    { engine: 'AOL', domain: 'aol.com', param: 'q' },
+    { engine: 'Ask', domain: 'ask.com', param: 'q' },
+    { engine: 'Auone', domain: 'auone.jp', param: 'q' },
+    { engine: 'Avg', domain: 'isearch.avg.com', param: 'q' },
+    { engine: 'Babylon', domain: 'search.babylon.com', param: 'q' },
+    { engine: 'Baidu', domain: 'baidu.com', param: 'wd' },
+    { engine: 'Baidu', domain: 'baidu.com', param: 'word' },
+    { engine: 'Biglobe', domain: 'biglobe.ne.jp', param: 'q' },
+    { engine: 'Bing', domain: 'bing.com', param: 'q' },
+    { engine: 'Centrum.cz', domain: 'centrum.cz', param: 'q' },
+    { engine: 'CNN', domain: 'cnn.com', param: 'q' },
+    { engine: 'Comcast', domain: 'comcast.net', param: 'q' },
+    { engine: 'Conduit', domain: 'conduit.com', param: 'q' },
+    { engine: 'Daum', domain: 'daum.net', param: 'q' },
+    { engine: 'Dogpile', domain: 'dogpile.com', param: 'q' },
+    { engine: 'DuckDuckGo', domain: 'duckduckgo.com', param: 'q' },
+    { engine: 'Ecosia', domain: 'ecosia.org', param: 'q' },
+    { engine: 'Eniro', domain: 'eniro.se', param: 'search_word' },
+    { engine: 'Firmy', domain: 'firmy.cz', param: 'q' },
+    { engine: 'Globo', domain: 'globo.com', param: 'q' },
+    { engine: 'go.mail.ru', domain: 'mail.ru', param: 'q' },
+    { engine: 'Google', domain: 'google.', param: 'q' }, // Google uses many regional domains
+    { engine: 'Incredimail', domain: 'search.incredimail.com', param: 'q' },
+    { engine: 'Kvasir', domain: 'kvasir.no', param: 'q' },
+    { engine: 'Lycos', domain: 'lycos.com', param: 'q' },
+    { engine: 'MSN', domain: 'msn.com', param: 'q' },
+    { engine: 'Najdi', domain: 'najdi.si', param: 'q' },
+    { engine: 'Naver', domain: 'naver.com', param: 'query' },
+    { engine: 'ONET', domain: 'onet.pl', param: 'qt' },
+    { engine: 'Qwant', domain: 'qwant.com', param: 'q' },
+    { engine: 'Rakuten', domain: 'rakuten.co.jp', param: 'qt' },
+    { engine: 'Rambler', domain: 'rambler.ru', param: 'query' },
+    { engine: 'Search-results', domain: 'search-results.com', param: 'q' },
+    { engine: 'search.smt.docomo', domain: 'docomo.ne.jp', param: 'q' },
+    { engine: 'Seznam', domain: 'seznam.cz', param: 'q' },
+    { engine: 'So.com', domain: 'so.com', param: 'q' },
+    { engine: 'Sogou', domain: 'sogou.com', param: 'query' },
+    { engine: 'Startsiden', domain: 'startsiden.no', param: 'q' },
+    { engine: 'Terra', domain: 'terra.com.br', param: 'query' },
+    { engine: 'Tut.by', domain: 'tut.by', param: 'query' },
+    { engine: 'Ukr', domain: 'ukr.net', param: 'q' },
+    { engine: 'Virgilio', domain: 'virgilio.it', param: 'qs' },
+    { engine: 'Yahoo', domain: 'yahoo.com', param: 'p' },
+    { engine: 'Yahoo', domain: 'yahoo.cn', param: 'p' },
+    { engine: 'Yahoo', domain: 'm.yahoo.com', param: 'p' },
+    { engine: 'Yandex', domain: 'yandex.com', param: 'text' },
+    { engine: 'Yandex', domain: 'yandex.ru', param: 'text' }
+  ];
   const defaultOrganicEngines = [
     'daum', 'eniro', 'naver', 'pchome', 'images.google', 'www.google', 'yahoo', 'www.yahoo', 
     'msn', 'www.bing', 'aol', 'lycos', 'ask', 'cnn', 'virgilio', 'baidu', 'alice', 'yandex', 
@@ -69,7 +121,7 @@ const attributionTrackingTask = (
     organicEngines: defaultOrganicEngines,
     cookieExpirationDays: 365
   };
-  
+
   const createEmptyCampaignDetails = (): CampaignDetailsModel => ({
     cm: '',
     cs: '',
