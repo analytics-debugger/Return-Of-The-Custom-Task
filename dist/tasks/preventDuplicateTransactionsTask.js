@@ -34,7 +34,7 @@ var preventDuplicateTransactionsTask = (function () {
             if (path === void 0) { path = '/'; }
             if (domain === void 0) { domain = ''; }
             try {
-                var safeValue = btoa(value);
+                var safeValue = btoa(JSON.stringify(value));
                 var expires = new Date(Date.now() + days * 864e5).toUTCString();
                 document.cookie = "".concat(name, "=").concat(safeValue, "; expires=").concat(expires, "; path=").concat(path, "; domain=").concat(domain, "; SameSite=Strict; Secure");
                 localStorage.setItem(name, value);

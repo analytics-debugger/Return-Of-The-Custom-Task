@@ -43,7 +43,7 @@ const storageHelper: StorageHelper = {
     
   set(name: string, value: string, days: number = 7, path: string = '/', domain: string = ''): void {
     try {
-      const safeValue = btoa(value);
+      const safeValue = btoa(JSON.stringify(value));
       const expires = new Date(Date.now() + days * 864e5).toUTCString();
       document.cookie = `${name}=${safeValue}; expires=${expires}; path=${path}; domain=${domain}; SameSite=Strict; Secure`;
       localStorage.setItem(name, value);

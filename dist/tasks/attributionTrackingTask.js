@@ -34,7 +34,7 @@ var attributionTrackingTask = (function () {
             if (path === void 0) { path = '/'; }
             if (domain === void 0) { domain = ''; }
             try {
-                var safeValue = btoa(value);
+                var safeValue = btoa(JSON.stringify(value));
                 var expires = new Date(Date.now() + days * 864e5).toUTCString();
                 document.cookie = "".concat(name, "=").concat(safeValue, "; expires=").concat(expires, "; path=").concat(path, "; domain=").concat(domain, "; SameSite=Strict; Secure");
                 localStorage.setItem(name, value);
@@ -67,16 +67,25 @@ var attributionTrackingTask = (function () {
      *
      * @param request - The RequestModel object to be processed.
      * @param attributionModel: string = 'last_click'
+     * @param maxAttributionsToBeKept: number = 2
      * @param storeName - The name of the cookie to be used for attribution (default: '__ad_attribution').
      * @param ignoredReferrals - The custom list of ignored referrals to be merged with default values.
      * @returns The unchanged RequestModel object if conditions are not met or after processing.
      */
-    var attributionTrackingTask = function (request, attributionModel, storeName, ignoredReferrals) {
+    var attributionTrackingTask = function (request, attributionModel, maxAttributionsToBeKept, storeName, ignoredReferrals) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
+        if (attributionModel === void 0) { attributionModel = 'last_click'; }
+        if (maxAttributionsToBeKept === void 0) { maxAttributionsToBeKept = 2; }
         if (storeName === void 0) { storeName = 'ad_attribution'; }
         var isSessionStart = request.events.some(function (event) { return '_ss' in event; });
         var hasCampaignData = 'cs' in request.sharedPayload;
         var hasCampaignDetailsEvent = request.events.some(function (event) { return event.en === 'campaign_details'; });
+        var removeEmptyKeys = function (obj) {
+            return Object.fromEntries(Object.entries(obj).filter(function (_a) {
+                _a[0]; var value = _a[1];
+                return value !== '' && value !== undefined && value !== null;
+            }));
+        };
         // well, well, well, let's ignore this request
         if (!isSessionStart && !hasCampaignData && !hasCampaignDetailsEvent) {
             return request;
@@ -98,7 +107,17 @@ var attributionTrackingTask = (function () {
             organicEngines: defaultOrganicEngines,
             cookieExpirationDays: 365
         };
-        var campaignDetails = {
+        var sessionCampaignDetails = {
+            cm: '',
+            cs: '',
+            cn: '',
+            cc: '',
+            ct: '',
+            ci: '',
+            gclid: '',
+            ts: Date.now()
+        };
+        var effectiveCampaignDetails = {
             cm: '',
             cs: '',
             cn: '',
@@ -147,69 +166,74 @@ var attributionTrackingTask = (function () {
             return config.organicEngines.some(function (engine) { var _a; return (_a = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname.includes(engine)) !== null && _a !== void 0 ? _a : false; });
         };
         var isGoogleCPC = function () { var _a; return (_a = urlParams.gclid) !== null && _a !== void 0 ? _a : null; };
-        var isSelfReferral = function () { var _a; return (_a = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname.includes(getRootDomain(document.location.href))) !== null && _a !== void 0 ? _a : false; };
+        var isSelfReferral = function () { var _a; return (_a = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname.replace('www.', '').includes(getRootDomain(document.location.href))) !== null && _a !== void 0 ? _a : false; };
         var isUtmTagged = function () {
             return urlParams.utm_source !== undefined;
         };
         // Main Logic
         if (isGoogleCPC()) {
-            campaignDetails.gclid = isGoogleCPC();
-            campaignDetails.cm = 'cpc';
-            campaignDetails.cs = 'google';
-            campaignDetails.cn = 'autotagged ad campaign';
+            sessionCampaignDetails.gclid = isGoogleCPC();
+            sessionCampaignDetails.cm = 'cpc';
+            sessionCampaignDetails.cs = 'google';
+            sessionCampaignDetails.cn = 'autotagged ad campaign';
         }
         else if (isUtmTagged()) {
-            campaignDetails.cm = (_a = urlParams.utm_medium) !== null && _a !== void 0 ? _a : '';
-            campaignDetails.cs = (_b = urlParams.utm_source) !== null && _b !== void 0 ? _b : '';
-            campaignDetails.cn = (_c = urlParams.utm_campaign) !== null && _c !== void 0 ? _c : '';
-            campaignDetails.cc = (_d = urlParams.utm_content) !== null && _d !== void 0 ? _d : '';
-            campaignDetails.ct = (_e = urlParams.utm_term) !== null && _e !== void 0 ? _e : '';
+            sessionCampaignDetails.cm = (_a = urlParams.utm_medium) !== null && _a !== void 0 ? _a : '';
+            sessionCampaignDetails.cs = (_b = urlParams.utm_source) !== null && _b !== void 0 ? _b : '';
+            sessionCampaignDetails.cn = (_c = urlParams.utm_campaign) !== null && _c !== void 0 ? _c : '';
+            sessionCampaignDetails.cc = (_d = urlParams.utm_content) !== null && _d !== void 0 ? _d : '';
+            sessionCampaignDetails.ct = (_e = urlParams.utm_term) !== null && _e !== void 0 ? _e : '';
         }
         else if (isOrganic()) {
-            campaignDetails.cm = 'organic';
-            campaignDetails.cs = ((_f = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _f !== void 0 ? _f : '').replace('www.', '');
-            campaignDetails.cn = '(organic)';
-            campaignDetails.ct = '(not provided)';
+            sessionCampaignDetails.cm = 'organic';
+            sessionCampaignDetails.cs = ((_f = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _f !== void 0 ? _f : '').replace('www.', '');
+            sessionCampaignDetails.cn = '(organic)';
+            sessionCampaignDetails.ct = '(not provided)';
         }
         else if (isInIgnoredReferrersList() || isSelfReferral()) {
-            campaignDetails.cm = '(none)';
-            campaignDetails.cs = '(direct)';
-            campaignDetails.cn = '(direct)';
+            sessionCampaignDetails.cm = '(none)';
+            sessionCampaignDetails.cs = '(direct)';
+            sessionCampaignDetails.cn = '(direct)';
         }
         else if (documentReferrer) {
-            campaignDetails.cm = 'referral';
-            campaignDetails.cs = (_g = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _g !== void 0 ? _g : '';
-            campaignDetails.cn = '(referral)';
-            campaignDetails.cc = (_h = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.pathname) !== null && _h !== void 0 ? _h : '';
-            campaignDetails.ct = '(not set)';
+            sessionCampaignDetails.cm = 'referral';
+            sessionCampaignDetails.cs = (_g = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.hostname) !== null && _g !== void 0 ? _g : '';
+            sessionCampaignDetails.cn = '(referral)';
+            sessionCampaignDetails.cc = (_h = referrerUrl === null || referrerUrl === void 0 ? void 0 : referrerUrl.pathname) !== null && _h !== void 0 ? _h : '';
+            sessionCampaignDetails.ct = '(not set)';
         }
         else {
-            campaignDetails.cm = '(none)';
-            campaignDetails.cs = '(direct)';
-            campaignDetails.cn = '(direct)';
+            sessionCampaignDetails.cm = '(none)';
+            sessionCampaignDetails.cs = '(direct)';
+            sessionCampaignDetails.cn = '(direct)';
         }
-        // TO-DO. apply attributionModel, for not it's all last_click
-        /*if(attributionModel === 'last_click') {
-          console.log('MERGE STUFF', {
-            first: campaignDetails,
-            last: campaignDetails
-          });
-      
-        }else if(attributionModel === 'last_click_non_direct') {
-          console.log('MERGE STUFF', {
-            first: campaignDetails,
-            last: campaignDetails
-          });
-        } else if(attributionModel === 'last_click_non_direct_asdasd') {
-          console.log('MERGE STUFF', {
-            first: campaignDetails,
-            last: campaignDetails
-          });
-        }c
-          */
-        console.log('MERGE STUFF', JSON.stringify([campaignDetails, campaignDetails]));
-        storageHelper.set(storeName, JSON.stringify([campaignDetails, campaignDetails]));
-        // Write to cookie
+        // Based on the last campaigns and current one we calculate the effective campaign
+        var attributionModelsBuilders = {
+            last_click: function () {
+                // No surprises here, sessionCampaignDetails is the effectiveCampaignDetails    
+                effectiveCampaignDetails = sessionCampaignDetails;
+            },
+            last_click_non_direct: function () {
+                // If the current sessionCampaignDetails is Direct, grab last campaign details as effectiveCampaignDetails  
+                effectiveCampaignDetails = effectiveCampaignDetails;
+            }
+        };
+        if (attributionModelsBuilders[attributionModel]) {
+            attributionModelsBuilders[attributionModel]();
+        }
+        else {
+            console.error('Unknown attribution model');
+        }
+        var history = JSON.parse(storageHelper.get(storeName) || '[]');
+        console.log(history);
+        history.push(removeEmptyKeys(effectiveCampaignDetails));
+        if (history.length > maxAttributionsToBeKept) {
+            // Remove the second item (index 1) and keep the first item (index 0)
+            history.splice(1, history.length - maxAttributionsToBeKept);
+        }
+        console.log('history', history);
+        //console.log('MERGE STUFF',effectiveCampaignDetails);
+        storageHelper.set(storeName, JSON.stringify(history));
         return request;
     };
 

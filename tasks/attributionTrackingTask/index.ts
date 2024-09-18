@@ -12,6 +12,9 @@ interface CampaignDetailsModel {
 }
 
 
+// Define allowed attribution models
+type AttributionModel = 'last_click' | 'last_click_non_direct';
+
 /**
  * Handles attribution tracking for the current RequestModel.
  * 
@@ -21,22 +24,28 @@ interface CampaignDetailsModel {
  * 
  * @param request - The RequestModel object to be processed.
  * @param attributionModel: string = 'last_click'
+ * @param maxAttributionsToBeKept: number = 2
  * @param storeName - The name of the cookie to be used for attribution (default: '__ad_attribution').
  * @param ignoredReferrals - The custom list of ignored referrals to be merged with default values.
  * @returns The unchanged RequestModel object if conditions are not met or after processing.
  */
 
 const attributionTrackingTask = (
-  request: RequestModel, 
-  attributionModel: string = 'last_click', 
-  storeName: string = 'ad_attribution', 
+  request: RequestModel,
+  attributionModel: AttributionModel = 'last_click',
+  maxAttributionsToBeKept: number = 2,
+  storeName: string = 'ad_attribution',
   ignoredReferrals: string[]
 ): RequestModel => {
 
   const isSessionStart: boolean = request.events.some(event => '_ss' in event);
   const hasCampaignData: boolean = 'cs' in request.sharedPayload;
   const hasCampaignDetailsEvent: boolean = request.events.some(event => event.en === 'campaign_details');
-
+  const removeEmptyKeys = <T extends Record<string, any>>(obj: T): T => {
+    return Object.fromEntries(
+      Object.entries(obj).filter(([_, value]) => value !== '' && value !== undefined && value !== null)
+    ) as T;
+  };
   // well, well, well, let's ignore this request
   if (!isSessionStart && !hasCampaignData && !hasCampaignDetailsEvent) {
     return request;
@@ -60,8 +69,8 @@ const attributionTrackingTask = (
     organicEngines: defaultOrganicEngines,
     cookieExpirationDays: 365
   };
-
-  const campaignDetails: CampaignDetailsModel = {
+  
+  const createEmptyCampaignDetails = (): CampaignDetailsModel => ({
     cm: '',
     cs: '',
     cn: '',
@@ -70,8 +79,11 @@ const attributionTrackingTask = (
     ci: '',
     gclid: '',
     ts: Date.now()
-  };
+  });
 
+  const sessionCampaignDetails: CampaignDetailsModel = createEmptyCampaignDetails();
+  let effectiveCampaignDetails: CampaignDetailsModel = createEmptyCampaignDetails();
+  
   const { dr: documentReferrer, dl: documentLocation = document.location.href } = request.sharedPayload;
 
   let referrerUrl: URL | null = null;
@@ -116,65 +128,71 @@ const attributionTrackingTask = (
   const isGoogleCPC = (): string | null => urlParams.gclid ?? null;
 
   const isSelfReferral = (): boolean =>
-    referrerUrl?.hostname.includes(getRootDomain(document.location.href)) ?? false;
+    referrerUrl?.hostname.replace('www.','').includes(getRootDomain(document.location.href)) ?? false;
 
   const isUtmTagged = (): boolean =>
     urlParams.utm_source !== undefined;
 
   // Main Logic
   if (isGoogleCPC()) {
-    campaignDetails.gclid = isGoogleCPC()!;
-    campaignDetails.cm = 'cpc';
-    campaignDetails.cs = 'google';
-    campaignDetails.cn = 'autotagged ad campaign';
+    sessionCampaignDetails.gclid = isGoogleCPC()!;
+    sessionCampaignDetails.cm = 'cpc';
+    sessionCampaignDetails.cs = 'google';
+    sessionCampaignDetails.cn = 'autotagged ad campaign';
   } else if (isUtmTagged()) {
-    campaignDetails.cm = urlParams.utm_medium ?? '';
-    campaignDetails.cs = urlParams.utm_source ?? '';
-    campaignDetails.cn = urlParams.utm_campaign ?? '';
-    campaignDetails.cc = urlParams.utm_content ?? '';
-    campaignDetails.ct = urlParams.utm_term ?? '';
+    sessionCampaignDetails.cm = urlParams.utm_medium ?? '';
+    sessionCampaignDetails.cs = urlParams.utm_source ?? '';
+    sessionCampaignDetails.cn = urlParams.utm_campaign ?? '';
+    sessionCampaignDetails.cc = urlParams.utm_content ?? '';
+    sessionCampaignDetails.ct = urlParams.utm_term ?? '';
   } else if (isOrganic()) {
-    campaignDetails.cm = 'organic';
-    campaignDetails.cs = (referrerUrl?.hostname ?? '').replace('www.', '');
-    campaignDetails.cn = '(organic)';
-    campaignDetails.ct = '(not provided)';
+    sessionCampaignDetails.cm = 'organic';
+    sessionCampaignDetails.cs = (referrerUrl?.hostname ?? '').replace('www.', '');
+    sessionCampaignDetails.cn = '(organic)';
+    sessionCampaignDetails.ct = '(not provided)';
   } else if (isInIgnoredReferrersList() || isSelfReferral()) {
-    campaignDetails.cm = '(none)';
-    campaignDetails.cs = '(direct)';
-    campaignDetails.cn = '(direct)';
+    sessionCampaignDetails.cm = '(none)';
+    sessionCampaignDetails.cs = '(direct)';
+    sessionCampaignDetails.cn = '(direct)';
   } else if (documentReferrer) {
-    campaignDetails.cm = 'referral';
-    campaignDetails.cs = referrerUrl?.hostname ?? '';
-    campaignDetails.cn = '(referral)';
-    campaignDetails.cc = referrerUrl?.pathname ?? '';
-    campaignDetails.ct = '(not set)';
+    sessionCampaignDetails.cm = 'referral';
+    sessionCampaignDetails.cs = referrerUrl?.hostname ?? '';
+    sessionCampaignDetails.cn = '(referral)';
+    sessionCampaignDetails.cc = referrerUrl?.pathname ?? '';
+    sessionCampaignDetails.ct = '(not set)';
   } else {
-    campaignDetails.cm = '(none)';
-    campaignDetails.cs = '(direct)';
-    campaignDetails.cn = '(direct)';
+    sessionCampaignDetails.cm = '(none)';
+    sessionCampaignDetails.cs = '(direct)';
+    sessionCampaignDetails.cn = '(direct)';
   }
-  // TO-DO. apply attributionModel, for not it's all last_click
-  /*if(attributionModel === 'last_click') {
-    console.log('MERGE STUFF', {
-      first: campaignDetails, 
-      last: campaignDetails
-    });
 
-  }else if(attributionModel === 'last_click_non_direct') {
-    console.log('MERGE STUFF', {
-      first: campaignDetails, 
-      last: campaignDetails
-    });
-  } else if(attributionModel === 'last_click_non_direct_asdasd') {
-    console.log('MERGE STUFF', {
-      first: campaignDetails, 
-      last: campaignDetails
-    });
-  }c
-    */
-  console.log('MERGE STUFF',JSON.stringify([campaignDetails, campaignDetails]));
-  storageHelper.set(storeName, JSON.stringify([campaignDetails, campaignDetails]));
-  // Write to cookie
+  // Based on the last campaigns and current one we calculate the effective campaign
+  const attributionModelsBuilders = {
+    last_click: () => {
+      // No surprises here, sessionCampaignDetails is the effectiveCampaignDetails    
+      effectiveCampaignDetails = sessionCampaignDetails;
+    },
+    last_click_non_direct: () => {
+      // If the current sessionCampaignDetails is Direct, grab last campaign details as effectiveCampaignDetails  
+      effectiveCampaignDetails = effectiveCampaignDetails;
+    }
+  };
+
+  if (attributionModelsBuilders[attributionModel]) {
+    attributionModelsBuilders[attributionModel](); 
+  } else {
+    console.error('Unknown attribution model');
+  }
+  
+  const history = JSON.parse(storageHelper.get(storeName) || '[]');
+
+  history.push(removeEmptyKeys(effectiveCampaignDetails));
+  if (history.length > maxAttributionsToBeKept) {
+    history.splice(1, history.length - maxAttributionsToBeKept);
+  }
+  console.log('history',history);
+  
+  storageHelper.set(storeName, JSON.stringify(history));
   return request;
 };
 
